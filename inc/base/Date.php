@@ -123,7 +123,7 @@ class Date
 			// We accept either a 3 element array (which will set the date), or
 			// a >= 5 element array (which will set the time as well, defaulting
 			// the seconds fields to 0)
-			} elseif (is_array($a) && count($a) >= 1) {
+			} elseif (is_array($a) && isset($a[0]) && count($a) >= 1) {
 			    
 			    if (count($a) == 1) {
 			        array_push($a, 1, 1, 0, 0, 0);
@@ -136,6 +136,17 @@ class Date
 			    $this->set_date($a[0], $a[1], $a[2]);
 			    $this->set_time($a[3], $a[4], $a[5]);
 			
+			// Associative array    
+			} elseif (is_array($a)) {
+			    
+			    $this->set_date(isset($a['year']) ? $a['year'] : date('Y'),
+			                    isset($a['month']) ? $a['month'] : 1,
+			                    isset($a['day']) ? $a['day'] : 1);
+			                    
+			    $this->set_time(isset($a['hour']) ? $a['hour'] : 0,
+			                    isset($a['minute']) ? $a['minute'] : 0,
+			                    isset($a['second']) ? $a['second'] : 0);
+			    
 			// Any other single argument is invalid
 			} else {
 				throw new Error_IllegalArgument("Error creating date instance - I couldn't work out what format you wanted");
@@ -469,6 +480,12 @@ class Date
 		$v = $k % $m;
 		if ($v < 0) $v += $m;
 		return $v;
+	}
+	
+	public function to_params() {
+	    return array('year'     => $this->y,
+	                 'month'    => $this->m,
+	                 'day'      => $this->d);
 	}
 }
 ?>

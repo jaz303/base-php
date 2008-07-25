@@ -41,6 +41,19 @@ class DateTest extends Test_Unit
         
     }
     
+    public function test_construction_by_associative_array() {
+        
+        $d = new Date(array('year' => 2006, 'month' => 5, 'day' => 12));
+        $this->assert_instance($d, 2006, 5, 12);
+        
+        $d = new Date(array('year' => 2006, 'month' => 5));
+        $this->assert_instance($d, 2006, 5, 1);
+        
+        $d = new Date(array('year' => 2006));
+        $this->assert_instance($d, 2006, 1, 1);
+        
+    }
+    
     public function test_construction_by_args() {
         $d = new Date(2006, 11, 2);
         $this->assert_instance($d, 2006, 11, 2);

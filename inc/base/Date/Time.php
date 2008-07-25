@@ -22,5 +22,14 @@ class Date_Time extends Date
 	public function to_iso() {
 	    return $this->to_iso_datetime();
 	}
+	
+	public function to_params() {
+	    return array('year'     => $this->y,
+	                 'month'    => $this->m,
+	                 'day'      => $this->d,
+	                 'hour'     => $this->h,
+	                 'minute'   => $this->i,
+	                 'second'   => $this->s);
+	}
 }
 ?>
