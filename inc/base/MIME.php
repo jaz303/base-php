@@ -21,7 +21,7 @@ class MIME
     public static function for_filename($filename, $default = null) {
         $path_info = pathinfo($filename);
         if ($path_info['extension']) {
-            return self::for_extension($path_info['extension']);
+            return self::for_extension($path_info['extension'], $default);
         } else {
             return $default ? $default : self::DEFAULT_MIME_TYPE;
         }
