@@ -117,7 +117,7 @@ class Annotation
 	            $annotations = self::parse_annotations($method);
 	            if (!count($annotations)) continue;
 	            if ($with && !isset($annotations[$with])) continue;
-	            $found[] = array($property, $annotations);
+	            $found[] = array($method, $annotations);
 	        }
 	    }
 	    
