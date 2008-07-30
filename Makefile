@@ -1,7 +1,9 @@
-docs:
+dummy:
+
+docs: dummy
 	phpdoc -c php-documentor
 	
-test:
+test: dummy
 	php run_tests.php
 	
 clean:
