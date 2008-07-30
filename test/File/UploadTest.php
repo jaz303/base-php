@@ -16,7 +16,7 @@ class File_UploadTest extends Test_Unit
     }
     
     public function teardown() {
-        @unlink('test.txt');
+        @unlink('test.tmp');
     }
     
     public function test_size() {
@@ -38,6 +38,7 @@ class File_UploadTest extends Test_Unit
         assert_equal('foo.text', $this->file->basename());
         assert_equal('foo', $this->file->filename());
         assert_equal('text', $this->file->extension());
+        @unlink('foo.text');
     }
     
     public function test_success_when_error_ok() {
