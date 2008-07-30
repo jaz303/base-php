@@ -70,7 +70,7 @@ class GDB_CheckViolation extends GDB_IntegrityConstraintViolation {}
  *  GDB::instance('my_instance');
  *  GDB::instance(); // implies 'default'
  * 
- *  TODO: data-mapping for currency values. Not too sure how to do this.
+ *  @todo data-mapping for currency values. Not too sure how to do this.
  *  I like the typical way Rails achieves it using foo_cents and foo_currency
  *  but this convention-based approach may be too restrictive given that GDB is
  *  designed to be equally compatible with legacy databases and greenfield
@@ -138,6 +138,10 @@ abstract class GDB
     
     /**
      * Execute a query and return a result object
+     *
+     * @param $sql SQL query
+     * @param $params optional argument(s) for auto quoting/interpolation
+     * @return result object
      */
     public function q($sql) {
         if (func_num_args() > 1) {
@@ -150,6 +154,10 @@ abstract class GDB
     
     /**
      * Execute a query and return the number of affected rows
+     *
+     * @param $sql SQL query
+     * @param $params optional argument(s) for auto quoting/interpolation
+     * @return result object
      */
     public function x($sql) {
         if (func_num_args() > 1) {
