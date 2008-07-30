@@ -1,9 +1,9 @@
 docs:
 	phpdoc -c php-documentor
 	
-tests:
+test:
 	php run_tests.php
 	
 clean:
-	rm -rf doc/*
+	rm -rf phpdoc/*
 	rm -rf tmp/*
