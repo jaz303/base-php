@@ -86,6 +86,10 @@ function assert_array($v, $msg = "") {
 	_assert(is_array($v), $msg);	
 }
 
+function assert_not_equal($l, $r, $msg = "") {
+    _assert($l != $r, $msg);
+}
+
 function assert_equal($l, $r, $msg = "") {
 	_assert($l == $r, $msg);
 }
