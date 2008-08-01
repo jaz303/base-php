@@ -24,6 +24,14 @@ class Annotation
 	 * You can't use any null expressions - this would be seen as a syntax
 	 * error. You can, of course, create arrays/objects containing nulls.
 	 *
+	 * It's also valid to do:
+	 *
+	 * :foo
+	 *
+	 * Which is simply a shortcut for
+	 *
+	 * :foo = true
+	 *
 	 * The JSON is subject to whatever nuances affect PHP's json_decode().
 	 * Particularly, string keys must always be enclosed in quotes, and
 	 * all string quoting must be done with double quotes.
@@ -44,19 +52,23 @@ class Annotation
 		}
 		
 		$annotations = array();
-		preg_match_all('/:(\w+)\s*=\s*(.*)/', $comment, $matches, PREG_SET_ORDER);
+		preg_match_all('/\*\s+:(\w+)\s*(=\s*(.*))?$/m', $comment, $matches, PREG_SET_ORDER);
 		foreach ($matches as $m) {
-			$json = trim($m[2]);
-			if ($json[0] == '[' || $json[0] == '{') {
-				$decode = json_decode($json, true);
+			if (!isset($m[3])) {
+			    $decode = true;
 			} else {
-				$decode = json_decode('[' . $json . ']', true);
-				if (is_array($decode)) {
-					$decode = $decode[0];
-				}
+			    $json = trim($m[3]);
+    			if ($json[0] == '[' || $json[0] == '{') {
+    				$decode = json_decode($json, true);
+    			} else {
+    				$decode = json_decode('[' . $json . ']', true);
+    				if (is_array($decode)) {
+    					$decode = $decode[0];
+    				}
+    			}
 			}
 			if ($decode === null) {
-				throw new Error_Syntax();
+				throw new Error_Syntax("Invalid JSON fragment: $json");
 			}
 			$annotations[$m[1]] = $decode;
 		}
