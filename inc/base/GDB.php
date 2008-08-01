@@ -186,7 +186,7 @@ abstract class GDB
     public function begin() {
         if ($this->tx_state == 'valid') throw new GDB_Exception("Can't begin transaction");
         $this->perform_begin();
-        $this->fs_queue = new FS_Queue($this->use_robust_queue);
+        // $this->fs_queue = new FS_Queue($this->use_robust_queue);
         $this->tx_count = 1;
         $this->tx_state = 'valid';
         return $this->fs_queue;
@@ -230,10 +230,10 @@ abstract class GDB
         if (--$this->tx_count == 0) {
             $this->tx_state = 'out';
             try {
-                $this->fs_queue->exec();
+                // $this->fs_queue->exec();
                 $this->fs_queue = null;
             } catch (Exception $e) {
-                $this->pdo->rollBack();
+                $this->perform_rollback();
                 throw $e;
             }
             $this->perform_commit();
