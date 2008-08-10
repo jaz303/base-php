@@ -814,7 +814,10 @@ abstract class GDBResult implements Iterator, Countable
                     $this->current_row_memo = $row[$this->mode_options];
                 } else {
                     if ($this->mode_ident[0] == ':') {
-                        $class = $row[substr($this->mode_ident, 1)];
+                        $class_key = substr($this->mode_ident, 1);
+                        $class = empty($row[$class_key]) ?
+                                 $this->mode_options['default_class'] :
+                                 $row[$class_key];
                     } else {
                         $class = $this->mode_ident;
                     }

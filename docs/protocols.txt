@@ -1,0 +1,19 @@
+File Protocol
+-------------
+
+size()                      // return size of file
+path()
+directory()
+basename()
+extension()
+type()                      // return mime type of file
+
+exists()                    // exists
+is_file()
+is_dir()
+
+read()                      // read file and return string, throw Error_IO on failure
+move_to($target)            // move
+is_image()                  //
+is_supported_image()        //
+create_image()
