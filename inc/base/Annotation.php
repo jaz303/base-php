@@ -13,7 +13,6 @@ class Annotation
 	/**
 	 * Parse the annotations for a given Reflector.
 	 * Annotations are derived from doc comments, and are similar to Java's.
-	 * I've never really looked at them in detail, just seen the syntax.
 	 *
 	 * Annotation syntax is simple:
 	 *
@@ -41,6 +40,11 @@ class Annotation
 	 * :requires_super_user = true
 	 * :requires_privileges = { "foo": "crude" }
 	 *
+	 * You can build up arrays on separate lines for clarity:
+	 *
+	 * :extensions[]        = { "name": "Extension1", "param": "foo" }
+	 * :extensions[]        = { "name": "Extension2", "param": "bar" }
+	 *
 	 * @param $r <tt>Reflector</tt> for which to parse annotations
 	 * @return associative array of annotations for <tt>$r</tt>
 	 */
@@ -52,12 +56,12 @@ class Annotation
 		}
 		
 		$annotations = array();
-		preg_match_all('/\*\s+:(\w+)\s*(=\s*(.*))?$/m', $comment, $matches, PREG_SET_ORDER);
+		preg_match_all('/\*\s+:(\w+)(\[\])?\s*(=\s*(.*))?$/m', $comment, $matches, PREG_SET_ORDER);
 		foreach ($matches as $m) {
-			if (!isset($m[3])) {
+			if (!isset($m[4])) {
 			    $decode = true;
 			} else {
-			    $json = trim($m[3]);
+			    $json = trim($m[4]);
     			if ($json[0] == '[' || $json[0] == '{') {
     				$decode = json_decode($json, true);
     			} else {
@@ -70,7 +74,12 @@ class Annotation
 			if ($decode === null) {
 				throw new Error_Syntax("Invalid JSON fragment: $json");
 			}
-			$annotations[$m[1]] = $decode;
+			if ($m[2] == '[]') {
+			    $annotations[$m[1]][] = $decode;
+			} else {
+			    $annotations[$m[1]] = $decode;
+			}
+			
 		}
 		
 		return $annotations;
@@ -104,9 +113,10 @@ class Annotation
 	 * @param $class class name to select annotations from
 	 * @param $include bitmask specifying search-space (properties and/or methods, default: both)
 	 * @param $with optional annotation key which must be present for annotation to be present in output set
+	 * @param $accessible set accessible flag?
 	 * @return array of entries, each entry is array(Reflector, annotations)
 	 */
-	public static function select($class, $include = null, $with = null) {
+	public static function select($class, $include = null, $with = null, $accessible = false) {
 	    
 	    if ($include === null) {
 	        $include = self::PROPERTY | self::METHOD;
@@ -120,6 +130,7 @@ class Annotation
 	            $annotations = self::parse_annotations($property);
 	            if (!count($annotations)) continue;
 	            if ($with && !isset($annotations[$with])) continue;
+	            $property->setAccessible($accessible);
 	            $found[] = array($property, $annotations);
 	        }
 	    }
@@ -129,6 +140,7 @@ class Annotation
 	            $annotations = self::parse_annotations($method);
 	            if (!count($annotations)) continue;
 	            if ($with && !isset($annotations[$with])) continue;
+	            $method->setAccessible($accessible);
 	            $found[] = array($method, $annotations);
 	        }
 	    }

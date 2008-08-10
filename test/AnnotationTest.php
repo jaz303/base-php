@@ -17,6 +17,13 @@ class AnnotationTestStub
 	 * :bar = [true, true, false]
 	 */
 	public static function baz() {}
+	
+	/**
+	 * :ext[] = 1
+	 * :ext[] = [1,2,3]
+	 * :ext[] = {"foo": "bar", "baz": "bleem"}
+	 */
+	public function zip() {}
 }
 
 class AnnotationTest extends Test_Unit
@@ -40,6 +47,19 @@ class AnnotationTest extends Test_Unit
 			array('foo' => 12345, 'bar' => array(true, true, false)),
 			Annotation::for_method('AnnotationTestStub', 'baz')
 		);
+	}
+	
+	public static function test_array_annotations() {
+	    assert_equal(
+	        array(
+	            'ext' => array(
+	                1,
+	                array(1, 2, 3),
+	                array('foo' => 'bar', 'baz' => 'bleem')
+	            )
+	        ),
+	        Annotation::for_method('AnnotationTestStub', 'zip')
+	    );
 	}
 }
 ?>
