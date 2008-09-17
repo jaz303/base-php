@@ -1,0 +1,39 @@
+h1. BasePHP
+
+h2. Overview
+
+BasePHP is a small, general PHP class library. It's written to take advantage of the new features offered by PHP 5.3 which, given my current work-rate, will probably be in wide-use by the time this library is complete.
+
+Main features:
+
+* Object oriented database access with support for:
+* * lazy connection via instance registry
+* * smart(er) automatic value quoting
+* * exception wrapping for catching constraint violations
+* * automatic conversion/instantiation of boolean/date types
+* * emulated nested transactions and queued filesystem operations
+* Class/method annotation using JSON fragments
+* Date classes
+* Powerful "rewire" feature which automatically creates wrapper objects for file uploads (coming soon: date and currency)
+* Image class supporting chainable operations, resizing, cropping and filtering
+* Active-record style model class with reflection-based plugin mechanism
+
+BasePHP makes heavy use of __autoload() - if you don't like this, this library isn't for you.
+
+h2. Installation
+
+Very simple, just copy the contents of the "inc" directory into your include root. You'll probably want to add a couple of lines to your master include file to make your life easier - just check out 'configure.php' for details.
+
+BasePHP currently includes no files intended for deployment to the webroot (stylesheets, scripts, images etc.). This may change in a future version if I start adding support for JavaScript libraries. Don't hold your breath, however.
+
+h2. Running Tests
+
+You can run the tests directly from the shell. For example:
+
+  jason@ratchet ~ $ cd $BASE_PHP_ROOT
+  jason@ratchet base $ php run_tests.php
+
+h2. Feedback and Contributions
+
+To report bugs, email me at jason@onehackoranother.com
+If you'd like to contribute, drop me a line at the same address, or fork the project and send a pull request.
