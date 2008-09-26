@@ -123,6 +123,27 @@ class MoneyTest extends Test_Unit
         }
         
     }
+    
+    public function test_format() {
+        
+        $m = new Money(1234, 'GBP');
+        
+        assert_equal('GBP', $m->format('%c'));
+        assert_equal('£', $m->format('%s'));
+        assert_equal('&pound;', $m->format('%h'));
+        assert_equal('1234', $m->format('%u'));
+        assert_equal('12.34', $m->format('%f'));
+
+        assert_equal('£ 12.34 GBP', $m->format('%s %f %c'));
+        
+        $m = new Money(99, 'GBP');
+        assert_equal('0.99', $m->format('%f'));
+        
+        $m = new Money(0, 'GBP');
+        assert_equal('0.00', $m->format('%f'));
+        
+    }
+    
 
     private function factory($val = 100, $currency = "GBP") {
         return new Money($val, $currency);

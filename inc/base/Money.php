@@ -68,11 +68,36 @@ class Money
 	//
 	// Formatting
 	
-	public function format() {
+	/**
+	 * Format this currency according to a given format.
+	 *
+	 * The following substitutions are understood:
+	 * %c - currency string
+	 * %s - currency symbol
+	 * %h - currency symbol (HTML)
+	 * %u - units
+	 * %f - decimal, example: 5.99
+	 *
+	 * Any other % formats which do not match exactly options above will be
+	 * passed to sprintf, which will receive a floating point version for
+	 * formatting.
+	 */
+	public function format($string) {
 	    
-	}
-	
-	public function to_html() {
+        $pow = log(self::$CURRENCIES[$this->currency][0], 10);
+        
+        $subs = array(
+            '%c'    => $this->currency,
+            '%s'    => self::$CURRENCIES[$this->currency][1],
+            '%h'    => self::$CURRENCIES[$this->currency][2],
+            '%u'    => $this->units,
+            '%f'    => "%01.{$pow}f"
+        );
+        
+        $str = str_replace(array_keys($subs), array_values($subs), $string);
+        $str = sprintf($str, $this->units / self::$CURRENCIES[$this->currency][0]);
+        
+        return $str;
 	    
 	}
 	
