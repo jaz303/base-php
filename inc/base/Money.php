@@ -9,8 +9,30 @@ if (!defined('MONEY_DEFAULT_BANK_CLASS')) {
 
 class Error_MoneyConversion extends Exception {}
 
+/**
+ * Money class
+ *
+ * @package BasePHP
+ * @author Jason Frame
+ */
 class Money
 {
+    //
+    // Bank
+    
+    private static $bank = null;
+    
+    public static function set_bank($mb) {
+        self::$bank = $mb;
+    }
+    
+    public static function get_bank() {
+		if (self::$bank === null) {
+			$class = MONEY_DEFAULT_BANK_CLASS;
+			self::$bank = new $class;
+		}
+        return self::$bank;
+    }
     
     //
     // Rounding
@@ -49,10 +71,20 @@ class Money
         $this->currency = self::real_currency($currency);
     }
     
+    /**
+     * Returns the number of units for this money value.
+     *
+     * @return units for this money value
+     */
     public function units() {
         return $this->units;
     }
     
+    /**
+     * Returns the currency of this money value.
+     *
+     * @return currency for this money value.
+     */
     public function currency() {
         return $this->currency;
     }

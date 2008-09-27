@@ -1,6 +1,10 @@
 <?php
 class MoneyTest extends Test_Unit
 {
+    public function test_default_bank_is_instance_of_correct_class() {
+        assert_equal(get_class(Money::get_bank()), MONEY_DEFAULT_BANK_CLASS);
+    }
+    
     public function test_units() {
         
         $m = new Money(100);
@@ -69,6 +73,21 @@ class MoneyTest extends Test_Unit
         
     }
     
+    public function test_implied_conversion_for_add() {
+        
+        $b = Money::get_bank();
+        $b->set_factor('USD', 'GBP', 0.5);
+        
+        $l = new Money(100, 'GBP');
+        $r = new Money(50, 'USD');
+        
+        $n = $l->add($r);
+        
+        assert_equal(125, $n->units());
+        assert_equal('GBP', $n->currency());
+        
+    }
+    
     public function test_sub() {
         
         $tests = array(
@@ -85,6 +104,21 @@ class MoneyTest extends Test_Unit
             $r = new Money($t[1]);
             assert_equal($t[2], $l->sub($r)->units());
         }
+        
+    }
+    
+    public function test_implied_conversion_for_sub() {
+        
+        $b = Money::get_bank();
+        $b->set_factor('USD', 'GBP', 0.5);
+        
+        $l = new Money(100, 'GBP');
+        $r = new Money(50, 'USD');
+        
+        $n = $l->sub($r);
+        
+        assert_equal(75, $n->units());
+        assert_equal('GBP', $n->currency());
         
     }
     
