@@ -15,6 +15,7 @@ class Image
     private $type       = null;
     private $filename   = null;
     private $parent     = null;
+    private $quality    = null;
     
     public function __construct($arg1, $arg2 = null) {
         if ($arg2 && is_numeric($arg1) && is_numeric($arg2)) {
@@ -141,34 +142,34 @@ class Image
         }
     }
     
-    private function dump($filename, $quality) {
+    private function dump($filename) {
         $func = $this->get_output_function();
         $gd = $this->prepare_for_output();
         if ($quality !== null) {
-            $func($gd, $filename, $this->normalise_quality($quality));
+            $func($gd, $filename, $this->normalise_quality($this->quality));
         } else {
-            $func($gd, null);
+            $func($gd, $filename);
         }
         if ($gd != $this->gd) imagedestroy($gd);
     }
     
-    public function data($quality = null) {
+    public function data() {
         ob_start();
-        $this->dump(null, $quality);
+        $this->dump(null);
         return ob_get_clean();
     }
     
-    public function output($quality = null) {
+    public function output() {
         header("Content-Type: " . $this->mime_type());
-        $this->dump(null, $quality);
+        $this->dump(null);
     }
     
-    public function save($filename = null, $quality = null) {
+    public function save($filename = null) {
         if ($filename) $this->filename = $filename;
         if ($this->filename === null) {
             // TODO: throw error
         }
-        $this->dump($this->filename, $quality);
+        $this->dump($this->filename);
         return $this;
     }
     
@@ -179,6 +180,14 @@ class Image
     public function get_width() { return imagesx($this->gd); }
     public function get_height() { return imagesy($this->gd); }
     public function is_true_color() { return imageistruecolor($this->gd); }
+    
+    //
+    // Quality
+    
+    public function quality($q) {
+        $this->quality = $q;
+        return $this;
+    }
     
     //
     // Cropping/Resizing
