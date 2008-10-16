@@ -1,0 +1,20 @@
+The final list of stuff to do before this library is actually useful
+====================================================================
+
+[X] Test database class
+[ ] Go over SQL builder class and ensure everything makes sense
+[ ] Finish table helper
+[ ] Annotations need option to merge data from parent classes
+[ ] Annotations should be statically cached
+[ ] Make sure File and File_Upload make sense
+[ ] Sort our parameter passing for Base::rewire()
+  [ ] Implement Date::from_param()
+  [ ] Implement
+[ ] Bring in ContactForm class from original BasePHP
+[ ] Document all the ducks
+
+Next Major Work
+===============
+
+Model
+DOM handling
