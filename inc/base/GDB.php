@@ -208,7 +208,7 @@ abstract class GDB
             return $this->begin();
         } elseif ($this->tx_state == 'invalid') {
             throw new GDB_Exception("Can't require transaction - has been rolled back");
-        } elseif ($this->rx_state == 'valid') {
+        } elseif ($this->tx_state == 'valid') {
             $this->tx_count++;
             return $this->fs_queue;
         }

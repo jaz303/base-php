@@ -362,10 +362,20 @@ class GDB_Test extends DB_Test
     
     //
     // Transaction workflow
+
+    public function test_cant_commit_when_no_tx()  {
+        try {
+            $this->db->commit();
+            fail();
+        } catch (GDB_Exception $e) {
+            pass();
+        }
+    }
     
     public function test_begin_commit() {
         $this->db->begin();
         $this->db->commit();
+        pass();
     }
     
     public function test_beginning_more_than_one_transaction_throws() {
@@ -377,6 +387,53 @@ class GDB_Test extends DB_Test
             pass();
             $this->db->rollback();
         }
+    }
+    
+    public function test_can_require_multiple_tx() {
+        $this->db->begin();
+            $this->db->require_transaction();
+                $this->db->require_transaction();
+                $this->db->commit();
+            $this->db->commit();
+        $this->db->commit();
+        pass();
+    }
+    
+    public function test_cant_commit_after_rollback_single_transaction() {
+        $this->db->begin();
+        $this->db->rollback();
+        try {
+            $this->db->commit();
+            fail();
+        } catch (GDB_Exception $e) {
+            pass();
+        }
+    }
+    
+    public function test_cant_commit_after_rollback_nested_transaction() {
+        $this->db->begin();
+        $this->db->require_transaction();
+        $this->db->rollback();
+        try {
+            $this->db->commit();
+            fail();
+        } catch (GDB_Exception $e) {
+            pass();
+        }
+    }
+    
+    public function test_can_begin_new_tx_after_rollback() {
+        $this->db->begin();
+        $this->db->rollback();
+        $this->db->begin();
+        pass();
+    }
+    
+    //
+    // Instance of SQL builder
+    
+    public function test_we_can_get_instance_of_sql_builder() {
+        _assert($this->db->sql() instanceof GDB_SQL);
     }
     
     //
