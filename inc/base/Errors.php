@@ -1,5 +1,5 @@
 <?php
-class Model_Errors
+class Errors
 {
     private $errors = array();
     private $base   = array();

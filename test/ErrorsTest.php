@@ -1,8 +1,8 @@
 <?php
-class Model_ErrorsTest extends Test_Unit
+class ErrorsTest extends Test_Unit
 {
     public function setup() {
-        $this->errors = new Model_Errors;
+        $this->errors = new Errors;
         _assert($this->errors->ok());
     }
     
