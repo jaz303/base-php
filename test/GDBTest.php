@@ -38,6 +38,41 @@ class GDB_Test extends DB_Test
     }
     
     //
+    // Error Handling
+    
+    public function test_invalid_statement_throws() {
+        
+        try {
+            $this->db->q("10 PRINT 'HELLO'\n20 GOTO 10\n");
+            fail();
+        } catch (GDB_QueryException $e) {
+            pass();
+        }
+        
+        try {
+            $this->db->x("10 PRINT 'HELLO'\n20 GOTO 10\n");
+            fail();
+        } catch (GDB_Exception $e) {
+            pass();
+        }
+        
+    }
+    
+    public function test_duplicate_key_throws_correct_exception() {
+        
+        $this->db->x("INSERT INTO bpt_user (forename) VALUES ('Jason')");
+        $iid = $this->db->last_insert_id();
+        
+        try {
+            $this->db->x("INSERT INTO bpt_user (id) VALUES ($iid)");
+            fail();
+        } catch (GDB_UniqueViolation $e) {
+            pass();
+        }
+        
+    }
+    
+    //
     // Query statements
     
     public function test_q_returns_result_object() {
@@ -162,6 +197,34 @@ class GDB_Test extends DB_Test
     
     //
     // Auto-quoting
+    
+    public function test_auto_quoting_the_whole_thing() {
+        
+        $auto_quotes = array(
+            array('10', '{i}', 10),
+            array('NULL', '{i}', null),
+            array("'Jason'", '{s}', 'Jason'),
+            array('1.23', '{f}', 1.23),
+            array('1', '{b}', true),
+            array('0', '{b}', false),
+            array("'2008-01-01'", '{d}', new Date(2008, 1, 1)),
+            array("'2008-02-10T16:15:12'", '{dt}', new Date_Time(2008, 2, 10, 16, 15, 12)),
+            array('NULL 20', '{i:b} {i:a}', array('a' => 20, 'b' => null)),
+            array("'Foo' 'Bar'", '{s} {s}', array('Foo', 'Bar')),
+            array('= 1', '{=i}', 1),
+            array("<> 'Jason'", '{!=s}', 'Jason'),
+            array('IS NULL', '{=b}', null),
+            array('IS NOT NULL', '{!=b}', null),
+            array('IN (1,2,3)', '{=i}', array(array(1,2,3))), // yeh, that's a special case
+            array('NOT IN (1,2,3)', '{!=i}', array(array(1,2,3))) // that too.
+        );
+        
+        foreach ($auto_quotes as $aq) {
+            $expect = array_shift($aq);
+            assert_equal($expect, call_user_func_array(array($this->db, 'auto_quote'), $aq));
+        }
+        
+    }
     
     //
     // Result object behaviour
