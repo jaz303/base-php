@@ -1,8 +1,8 @@
 <?php
 /**
- * Wrapper around incoming client request. <tt>ArrayAccess</tt> and
- * <tt>IteratorAggregate</tt> implementations allow instances of
- * <tt>Request</tt> to be used in place of <tt>$_REQUEST</tt>.
+ * Wrapper around incoming client request. <var>ArrayAccess</var> and
+ * <var>IteratorAggregate</var> implementations allow instances of
+ * <var>Request</var> to be used in place of <var>$_REQUEST</var>.
  *
  * @author Jason Frame
  * @package BasePHP
@@ -11,7 +11,8 @@ class Request implements ArrayAccess, IteratorAggregate
 {
     private $timestamp  = null;
     private $time       = null;
-    private $language   = null;
+    private $wants      = null;
+    private $languages  = null;
     
     public function __construct() {
         $this->timestamp = $_SERVER['REQUEST_TIME'];
@@ -142,10 +143,37 @@ class Request implements ArrayAccess, IteratorAggregate
     
     //
     // Language
+    // Note: country codes are disregarded
     
-    public function language() {
-        if ($this->language === null) $this->detect_language();
-        return $this->language;
+    /**
+     * Returns an array of language codes accepted by the client.
+     * Array is map of language code => priority.
+     * Sorting is in descending order (e.g. highest priority first)
+     */
+    public function languages() {
+        if ($this->languages === null) {
+            $this->languages = $this->detect_languages();
+        }
+        return $this->languages;
+    }
+    
+    public function language($accept = null) {
+        $languages = $this->languages();
+        if (count($languages) == 0) {
+            return null;
+        } elseif (is_array($accept)) {
+            $best = array(0, null);
+            foreach ($accept as $a) {
+                if (isset($languages[$a]) && $languages[$a] > $best[0]) {
+                    $best = array($languages[$a], $a);
+                }
+            }
+            return $best[1];
+        } else {
+            reset($languages);
+            list($code, $priority) = each($languages);
+            return $code;
+        }
     }
     
     //
@@ -158,20 +186,23 @@ class Request implements ArrayAccess, IteratorAggregate
     //
     // Wants
     
+    public function wants() {
+        if ($this->wants === null) {
+            $this->wants = explode(',', $_SERVER['HTTP_ACCEPT']);
+        }
+        return $this->wants;
+    }
+    
     public function wants_html() {
-        
     }
     
     public function wants_json() {
-        
     }
     
     public function wants_xml() {
-        
     }
     
     public function wants_image() {
-        
     }
     
     //
@@ -197,22 +228,39 @@ class Request implements ArrayAccess, IteratorAggregate
         return new ArrayIterator($_REQUEST);
     }
     
+    //
+    // Privates
     
-    private function detect_language() {
-        if (!isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-            return null;
-        } else {
-            
+    private function detect_languages() {
+        
+        if (empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+            return array();
         }
         
-        
-        
+        try {
+            
+            $detected = array();
+            foreach (explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']) as $lang) {
+                $bits = array_map('trim', explode(';q=', $lang));
+                $bits[] = 1;
+                if (preg_match('/^([a-z]+)(\-[a-z]+)?$/i', $bits[0], $matches)) {
+                    if (preg_match('/^\d+(\.\d+)?$/', $bits[1])) {
+                        $detected[$matches[1]] = floatval($bits[1]);
+                    } else {
+                        throw new Exception;
+                    }
+                } else {
+                    throw new Exception;
+                }
+            }
+            
+            krsort($detected);
+            return $detected;
+            
+        } catch (Exception $e) {
+            return array();
+        }
+
     }
-    
-    private static $language_map = array(
-        
-        
-        
-    );
 }
 ?>
