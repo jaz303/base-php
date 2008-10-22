@@ -157,12 +157,12 @@ class Request implements ArrayAccess, IteratorAggregate
         return $this->languages;
     }
     
-    public function language($accept = null) {
+    public function language($accept = null, $default = null) {
         $languages = $this->languages();
         if (count($languages) == 0) {
-            return null;
+            return $default;
         } elseif (is_array($accept)) {
-            $best = array(0, null);
+            $best = array(0, $default);
             foreach ($accept as $a) {
                 if (isset($languages[$a]) && $languages[$a] > $best[0]) {
                     $best = array($languages[$a], $a);
