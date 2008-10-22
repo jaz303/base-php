@@ -17,7 +17,7 @@ class ISO_Language
      *
      * @return array of all language codes
      */
-    public static function get_all_codes() {
+    public static function codes() {
         return array_keys(self::$codes[ISO_LANGUAGE]);  
     }
     
@@ -33,7 +33,7 @@ class ISO_Language
      * @param $sep separator string to place between perferred languages and remainder
      * @return array of language code => language name
      */
-    public static function get_all_names($pref = null, $sep = null) {
+    public static function names($pref = null, $sep = null) {
         if ($pref !== null) {
             $out = array();
             foreach ($pref as $p) $out[$p] = self::$codes[ISO_LANGUAGE][$p];
@@ -51,7 +51,7 @@ class ISO_Language
      * @param $code language code to query for
      * @return true if language code $code exists
      */
-    public static function code_exists($code) {
+    public static function exists($code) {
         return isset(self::$codes[ISO_LANGUAGE][$code]);
     }
     
@@ -67,7 +67,7 @@ class ISO_Language
      * @throws Error_NoSuchElement if code does not exist and no default is specified
      */
     public static function get_name($code, $default = null) {
-        if (!isset(self::$codes[ISO_LANGUAGE][$code])) {
+        if (!self::exists($code)) {
             if ($default === null) {
                 throw new Error_NoSuchElement("Language code '$code' does not exist");
             } else {

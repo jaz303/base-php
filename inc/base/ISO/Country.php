@@ -12,7 +12,7 @@ class ISO_Country
 	/**
 	 * Returns an array of all country codes.
 	 */
-	public static function get_all_codes() {
+	public static function codes() {
 		return array_keys(self::$codes);	
 	}
 	
@@ -24,7 +24,7 @@ class ISO_Country
 	 * between the preferred list and the rest. The key value for the separator
 	 * will always be the empty string.
 	 */
-	public static function get_all_names($pref = null, $sep = null) {
+	public static function names($pref = null, $sep = null) {
 		if ($pref !== null) {
 			$out = array();
 			foreach ($pref as $p) $out[$p] = self::$codes[$p];
@@ -39,7 +39,7 @@ class ISO_Country
 	/**
 	 * Returns true if the specified country code exists.
 	 */
-	public static function code_exists($code) {
+	public static function exists($code) {
 		return isset(self::$codes[$code]);
 	}
 	
@@ -49,8 +49,8 @@ class ISO_Country
 	 * be returned. Otherwise, if $code does not exist, an exception will be
 	 * thrown.
 	 */
-	public static function get_name($code, $default = null) {
-		if (!isset(self::$codes[$code])) {
+	public static function name_for($code, $default = null) {
+		if (!self::exists($code)) {
 			if ($default === null) {
 				throw new Error_NoSuchElement("Country code '$code' does not exist");
 			} else {
