@@ -2,6 +2,7 @@ The final list of stuff to do before this library is actually useful
 ====================================================================
 
 [X] Test database class
+[ ] Finish Request class
 [ ] Go over SQL builder class and ensure everything makes sense
 [ ] Finish table helper
 [ ] Annotations need option to merge data from parent classes
