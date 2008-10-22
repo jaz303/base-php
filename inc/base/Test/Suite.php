@@ -47,3 +47,4 @@ class Test_Suite
 		$reporter->summary();
 	}
 }
+?>
