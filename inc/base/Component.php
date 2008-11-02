@@ -80,6 +80,27 @@ abstract class Component
     }
 }
 
+class Event
+{
+    public $source;
+    public $name;
+    public $args;
+    
+    public function __construct($source, $name, $args = array()) {
+        $this->source   = $source;
+        $this->name     = $name;
+        $this->args     = $args;
+    }
+    
+    public function __isset($k) {
+        return array_key_exists($k, $this->args);
+    }
+    
+    public function __get($k) {
+        return isset($this->args[$k]) ? $this->args[$k] : null;
+    }
+}
+
 abstract class Component_Extension
 {
     protected $source;
