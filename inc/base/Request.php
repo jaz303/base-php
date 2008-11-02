@@ -7,12 +7,18 @@
  * @author Jason Frame
  * @package BasePHP
  */
-class Request implements ArrayAccess, IteratorAggregate
+class HTTP_Request implements ArrayAccess, IteratorAggregate
 {
     private $timestamp  = null;
     private $time       = null;
     private $wants      = null;
     private $languages  = null;
+    
+    // Memo for raw POST data
+    private $post_raw   = null;
+    
+    // Memo for SimpleXML tree of posted XML
+    private $post_xml   = null;
     
     public function __construct() {
         $this->timestamp = $_SERVER['REQUEST_TIME'];
@@ -177,10 +183,39 @@ class Request implements ArrayAccess, IteratorAggregate
     }
     
     //
+    // Data
+    
+    /**
+     * Returns the raw POST data for this request.
+     *
+     * @return the raw POST data for this request.
+     */
+    public function raw_post_data() {
+        if ($this->post_raw === null) {
+            $this->post_raw = file_get_contents('php://input');
+        }
+        return $this->post_raw;
+    }
+    
+    public function xml() {
+        if ($this->post_xml === null) {
+            $this->post_xml = new SimpleXMLElement($this->raw_post_data());
+        }
+        return $this->post_xml;
+    }
+    
+    //
     // User Agent
     
+    public function is_xml_rpc() {
+        return $this->is_post()
+                && $_SERVER['CONTENT_TYPE'] == 'text/xml'
+                && XML_RPC::is_request($this->xml());
+    }
+    
     public function is_xhr() {
-        
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH'])
+                && $_SERVER['HTTP_X_REQUESTED_WITH'] == 'XMLHttpRequest';
     }
     
     //
