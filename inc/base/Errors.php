@@ -1,5 +1,5 @@
 <?php
-class Errors
+class Errors implements IteratorAggregate
 {
     private $errors = array();
     private $base   = array();
@@ -38,6 +38,10 @@ class Errors
         }
         foreach ($this->base as $b) $messages[] = $b;
         return $messages;
+    }
+    
+    public function getIterator() {
+        return new ArrayIterator($this->full_messages());
     }
 }
 ?>
