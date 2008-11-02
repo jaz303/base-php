@@ -1,13 +1,15 @@
 <?php
-/**
- * :extensions[] = ["MBEMT_Extension_1"]
- * :extensions[] = ["MBEMT_Extension_2", 1, 2, [true, false], {"foo": "bar"}]
- */
-class MBEMT_Model extends Model_Base
+class CET_Component extends Component
 {
+    protected function extensions() {
+        return array(
+            $this->create_extension('CET_Extension_1'),
+            $this->create_extension('CET_Extension_2', 1, 2, array(true, false), array('foo' => 'bar'))
+        );
+    }
 }
 
-class MBEMT_Extension_1 extends Model_Extension
+class CET_Extension_1 extends Component_Extension
 {
     public function get_exported_methods() {
         return array(
@@ -22,7 +24,7 @@ class MBEMT_Extension_1 extends Model_Extension
     public function self() { return $this; }
 }
 
-class MBEMT_Extension_2 extends Model_Extension
+class CET_Extension_2 extends Component_Extension
 {
     public function get_exported_methods() {
         return array(
@@ -35,10 +37,10 @@ class MBEMT_Extension_2 extends Model_Extension
     public function self() { return $this; }
 }
 
-class Model_BaseExtensionMechanismTest extends Test_Unit
+class ComponentExtensionMechanismTest extends Test_Unit
 {
     public function setup() {
-        $this->model = new MBEMT_Model;
+        $this->model = new CET_Component;
     }
     
     public function test_extension_methods_can_be_called() {
@@ -48,7 +50,7 @@ class Model_BaseExtensionMechanismTest extends Test_Unit
     }
     
     public function test_later_extension_takes_precedence_when_methods_collide() {
-        _assert($this->model->self() instanceof MBEMT_Extension_2);
+        _assert($this->model->self() instanceof CET_Extension_2);
     }
     
     public function test_get_source_returns_correct_model() {
@@ -60,7 +62,7 @@ class Model_BaseExtensionMechanismTest extends Test_Unit
         $property->setAccessible(true);
         $reflection = $property->getValue($this->model->self());
         _assert($reflection instanceof ReflectionClass);
-        assert_equal('MBEMT_Model', $reflection->getName());
+        assert_equal('CET_Component', $reflection->getName());
     }
     
     public function test_options_setup_correctly() {

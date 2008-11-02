@@ -1,73 +1,80 @@
 <?php
-class Model_Base
+class Model_Base extends Component
 {
-    
-    
-    
-    //
-    // Extensions
-    
-    private $extensions_initialised = false;
-    private $extension_methods      = array();
-    private $named_extensions       = array();
-    private $anonymous_extensions   = array();
-    
-    protected function initialise_extensions() {
-        if (!$this->extensions_initialised) {
-            $annotations = Annotation::for_class(get_class($this));
-            if (isset($annotations['extensions'])) {
-                $class_reflection = new ReflectionClass($this);
-                foreach ($annotations['extensions'] as $extension_args) {
-                    $extension_class = array_shift($extension_args);
-                    $extension = new $extension_class($this, $class_reflection, $extension_args);
-                    foreach ($extension->get_exported_methods() as $internal => $external) {
-                        $method = new ReflectionMethod($extension, $internal);
-                        $this->extension_methods[$external] = $method->getClosure($extension);
-                    }
-                    if ($extension_name = $extension->get_name()) {
-                        $this->named_extensions[$extension_name] = $extension;
-                    } else {
-                        $this->anonymous_extensions[] = $extension;
-                    }
-                }
-            }
-            $this->extensions_initialised = true;
+    public function __construct($p = null) {
+        if (is_array($p)) {
+            // set up params
+        } elseif ($p !== null) {
+            // load by ID
         }
     }
     
-    public function __call($method, $args) {
-        $this->initialise_extensions();
-        if (isset($this->extension_methods[$method])) {
-            return call_user_func_array($this->extension_methods[$method], $args);
-        } else {
-            throw new Error_MethodMissing;
-        }
+    //
+    // ID stuff
+    
+    protected $id = null;
+    
+    public function get_id() {
+        return $this->id;
+    }
+    
+    protected function set_id($id) {
+        $this->id = $id === null ? null : (int) $id;
+    }
+    
+    public function is_new() {
+        return $this->id === null;
+    }
+    
+    public function is_saved() {
+        return $this->id !== null;
+    }
+    
+    //
+    // Helpers for generating associations
+    
+    protected function has_one($name, $class_name, $options = array()) {
+        return new Model_Association_HasOne($this, $name, $class_name, $options);
+    }
+    
+    protected function has_many($name, $class_name, $options = array()) {
+        return new Model_Association_HasMany($this, $name, $class_name, $options);
+    }
+    
+    protected function belongs_to($name, $class_name, $options = array()) {
+        return new Model_Association_BelongsTo($this, $name, $class_name, $options);
+    }
+    
+    //
+    // Events
+    
+}
+
+abstract class Model_Association extends Component_Extension
+{
+    protected $association_name;
+    protected $associated_class;
+    
+    public function __construct($source, $reflection, $name, $class, $options) {
+        $this->association_name     = $name;
+        $this->assocaited_class     = $class;
+        parent::__construct($source, $reflection, $options);
     }
 }
 
-class Model_Extension
+class Model_Association_HasOne extends Model_Association
 {
-    protected $source;
-    protected $reflection;
-    protected $options;
     
-    public function __construct($source, $reflection, $options) {
-        $this->source       = $source;
-        $this->reflection   = $reflection;
-        $this->options      = $options;
-    }
+}
+
+class Model_Association_HasMany extends Model_Association
+{
     
-    public function get_source() {
-        return $this->source;
-    }
+}
+
+class Model_Association_BelongsTo extends Model_Association
+{
     
-    public function get_exported_methods() {
-        return array();
-    }
-    
-    public function get_name() {
-        return null;
-    }
 }
 
 
