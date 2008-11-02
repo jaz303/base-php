@@ -7,7 +7,7 @@ if (!defined('MONEY_DEFAULT_BANK_CLASS')) {
     define('MONEY_DEFAULT_BANK_CLASS', 'Money_Bank');
 }
 
-class Error_MoneyConversion extends Exception {}
+class Money_ConversionError extends Exception {}
 
 /**
  * Money class
@@ -91,7 +91,7 @@ class Money
     
     public function convert_to($currency) {
         if (self::$bank === null) {
-            throw new Error_MoneyConversion("Bank not available");
+            throw new Money_ConversionError("Bank not available");
         } else {
             return self::$bank->convert($this, $currency);
         }
@@ -173,5 +173,40 @@ class Money
         'USD' => array(100, '$', '$'),
         'EUR' => array(100, '€', '&euro;')
     );
+}
+
+/**
+ * Converts money from one currency to another.
+ *
+ * @package BasePHP
+ * @author Jason Frame
+ */
+class Money_Bank
+{
+    private $factors = array();
+    
+    public function set_factor($from, $to, $factor, $reverse = false) {
+        $this->factors[$from][$to] = $factor;
+        if ($reverse) {
+            $this->factors[$to][$from] = 1 / $factor;
+        }
+    }
+    
+    public function get_factor($from, $to) {
+        return isset($this->factors[$from][$to]) ? $this->factors[$from][$to] : null;
+    }
+    
+    public function convert(Money $m, $to_currency, $round = 'down') {
+        $factor = $this->get_factor($m->currency(), $to_currency);
+        if ($factor === null) {
+            throw new Money_ConversionError;
+        }
+        $units = Money::round($m->units() * $factor, $round);
+        return new Money($units, $to_currency);
+    }
+    
+    public function rob() {
+        return new Money(100000000);
+    }
 }
 ?>
