@@ -13,6 +13,8 @@ The final list of stuff to do before this library is actually useful
   [ ] Implement
 [ ] Bring in ContactForm class from original BasePHP
 [ ] Document all the ducks
+[ ] Base::rewire() should recognise XML, JSON requests and convert to native types
+[ ] Logging class
 
 Next Major Work
 ===============
