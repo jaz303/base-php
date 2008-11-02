@@ -5,7 +5,7 @@
  * This class is designed so that the country list can be updated without
  * breaking applications. For this reason, your application should tolerate
  * non-existent countries through use of default values (i.e. 'Unknown'), or
- * by checking using code_exists() - whichever is most appropriate.
+ * by checking using exists() - whichever is most appropriate.
  */
 class ISO_Country
 {
