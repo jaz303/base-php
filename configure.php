@@ -20,8 +20,6 @@ function base_php_autoloader($class) {
     
     // START-MAP
     static $map = array (
-      'Model_Base' => 'base/Model/Base.php',
-      'Model_Base_AttributeReflection' => 'base/__Base.php',
       'Annotation' => 'base/Annotation.php',
       'Base' => 'base/Base.php',
       'Component' => 'base/Component.php',
@@ -67,6 +65,9 @@ function base_php_autoloader($class) {
       'Test_Reporter' => 'base/Test/Reporter.php',
       'Test_Suite' => 'base/Test/Suite.php',
       'Test_Unit' => 'base/Test/Unit.php',
+      'Model_StateError' => 'base/Model/Base.php',
+      'Model_NoSuchAttributeError' => 'base/Model/Base.php',
+      'Model_Base' => 'base/Model/Base.php',
       'Model_Association' => 'base/Model/Base.php',
       'Model_Association_HasOne' => 'base/Model/Base.php',
       'Model_Association_HasMany' => 'base/Model/Base.php',
