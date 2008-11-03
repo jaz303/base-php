@@ -1,4 +1,8 @@
 <?php
+/**
+ * @package BasePHP
+ * @author Jason Frame
+ */
 abstract class Component
 {
     //
@@ -80,6 +84,10 @@ abstract class Component
     }
 }
 
+/**
+ * @package BasePHP
+ * @author Jason Frame
+ */
 class Event
 {
     public $source;
@@ -101,6 +109,10 @@ class Event
     }
 }
 
+/**
+ * @package BasePHP
+ * @author Jason Frame
+ */
 abstract class Component_Extension
 {
     protected $source;
