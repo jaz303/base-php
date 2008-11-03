@@ -91,7 +91,7 @@ function assert_not_equal($l, $r, $msg = "") {
 }
 
 function assert_equal($l, $r, $msg = "") {
-	_assert($l == $r, $msg);
+    _assert($l == $r, $msg);
 }
 
 function assert_identical($l, $r, $msg = "") {
