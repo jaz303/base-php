@@ -94,7 +94,7 @@ abstract class GDB
             global $_GDB;
             
             if (!isset($_GDB[$name])) {
-                throw new GDBException("Can't find configuration for GDB connection '$name'");
+                throw new GDB_Exception("Can't find configuration for GDB connection '$name'");
             }
             
             $config = $_GDB[$name];
