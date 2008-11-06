@@ -2,6 +2,7 @@
 require '../configure.php';
 
 $table = new H_Table('#foo.bar.baz');
+$table->caption('This is the caption');
 $table->add_class('bleem')
       ->cycle('row-1', 'row-2', 'row-3')
       ->if_empty("Sorry, couldn't find anything", "#empty.error")

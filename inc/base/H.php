@@ -88,6 +88,8 @@ class H_Table
     private $pad            = null;
     private $pad_attribs    = array();
     
+    private $caption        = null;
+    
     private $column_keys    = null;
     private $column_headers = null;
     private $data           = array();
@@ -127,6 +129,11 @@ class H_Table
     public function pad($pad, $attribs = '') {
         $this->pad          = $pad;
         $this->pad_attribs  = H::parse_selector($attribs);
+        return $this;
+    }
+    
+    public function caption($caption) {
+        $this->caption = $caption;
         return $this;
     }
     
@@ -221,18 +228,20 @@ class H_Table
     }
     
     protected function render_header() {
-        
-        if ($this->column_headers === null) {
-            return '';
+      
+        $html = '';
+      
+        if ($this->caption !== null) {
+            $html .= H::tag('caption', $this->caption);
         }
         
-        $html  = "<thead><tr>";
-        
-        foreach ($this->column_headers as $title) {
-            $html .= H::tag('th', $title);
+        if ($this->column_headers !== null) {
+            $html .= "<thead><tr>";
+            foreach ($this->column_headers as $title) {
+                $html .= H::tag('th', $title);
+            }
+            $html .= "</tr></thead>";
         }
-        
-        $html .= "</tr></thead>";
         
         return $html;
         
