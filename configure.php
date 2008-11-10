@@ -103,6 +103,7 @@ function base_php_autoloader($class) {
       'Contact_Form_Date' => 'base/Contact/Form.php',
       'Contact_Form_Time' => 'base/Contact/Form.php',
       'Contact_Form_Checkbox' => 'base/Contact/Form.php',
+      'Contact_Form_File' => 'base/Contact/Form.php',
       'Contact_Mailer' => 'base/Contact/Form.php',
       'Contact_CSV' => 'base/Contact/Form.php',
     );

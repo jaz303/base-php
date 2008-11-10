@@ -1,58 +1,58 @@
 <?php
-/**
- * Form Processors
- *
- * Example Use:
- * 
- * $m = new Contact_Mailer;
- * $m->text('title')->trim()->required();
- * $m->text('name')->trim()->value('who?')->required();
- * $m->text('address_1')->trim()->required();
- * $m->text('address_2')->trim();
- * $m->text('city')->trim()->required();
- * $m->text('postcode')->trim()->to_upper()->required();
- * $m->text('telephone')->trim()->required();
- * $m->text('email')->trim()->required()->match('/@/');
- * $m->text('email_confirmation');
- * $m->textarea('question', 10, 10)->required();
- * 
- * $m->to('jason@onehackoranother.com');
- * $m->from('no-reply@onehackoranother.com');
- * $m->subject('Website enquiry');
- * 
- * $template = <<<TEMPLATE
- * From: {title} {name}
- * 
- * Address
- * -------
- * {address_1}
- * {address_2}
- * {city}
- * {postcode}
- * 
- * Telephone: {telephone}
- * Email: {email}
- * 
- * Question
- * --------
- * {question}
- * TEMPLATE;
- * 
- * $m->template($template);
- * 
- * if ($_SERVER['REQUEST_METHOD'] == 'POST') {
- *     if ($m->handle($_POST)) {
- *         $_TPL['success'] = true;
- *     } else {
- *         $_TPL['errors'] = $m->get_errors();
- *     }
- * 
- * }
- * 
- * $_TPL['form'] = $m;
- */
+// Example Use:
+// 
+// $m = new Blade_ContactMailer;
+// $m->text('title')->trim()->required();
+// $m->text('name')->trim()->value('who?')->required();
+// $m->text('address_1')->trim()->required();
+// $m->text('address_2')->trim();
+// $m->text('city')->trim()->required();
+// $m->text('postcode')->trim()->to_upper()->required();
+// $m->text('telephone')->trim()->required();
+// $m->text('email')->trim()->required()->match('/@/');
+// $m->text('email_confirmation');
+// $m->textarea('question', 10, 10)->required();
+// 
+// $m->to('jason@magiclamp.co.uk');
+// $m->from('no-reply@foobar.com');
+// $m->subject('Website enquiry');
+// 
+// $template = <<<TEMPLATE
+// From: {title} {name}
+// 
+// Address
+// -------
+// {address_1}
+// {address_2}
+// {city}
+// {postcode}
+// 
+// Telephone: {telephone}
+// Email: {email}
+// 
+// Question
+// --------
+// {question}
+// TEMPLATE;
+// 
+// $m->template($template);
+// 
+// if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+//     if ($m->handle($_POST)) {
+//         $_TPL['success'] = true;
+//     } else {
+//         $_TPL['errors'] = $m->get_errors();
+//     }
+// }
+// 
+// $_TPL['form'] = $m;
+//
 abstract class Contact_Form
 {
+    public static function humanise($field) {
+        return ucfirst(strtolower(str_replace(array('_', '-'), ' ', $field)));
+    }
+    
     private $fields     = array();
     private $errors     = array();
     
@@ -92,24 +92,34 @@ abstract class Contact_Form
         return $f;
     }
     
-    public function handle($data) {
+    public function upload($name) {
+        $f = new Contact_Form_File($name);
+        $this->fields[$name] = $f;
+        return $f;
+    }
+    
+    public function handle($data, $files = array()) {
         
         $this->errors = array();
         
-        foreach ($this->fields as $k => $field) {
-            $this->fields[$k]->set_value(@$data[$k]);
-            $error = $field->process_and_validate();
-            if ($error !== true) {
-                $this->errors[] = Inflector::humanise($k) . ' ' . $error;
-            }
+        foreach ($files as $k => $file_info) {
+            $data[$k] = $file_info;
         }
         
+        foreach ($this->fields as $k => $field) {
+            $field->set_value(@$data[$k]);
+            $error = $field->process_and_validate();
+            if ($error !== true) {
+                $this->errors[] = self::humanise($k) . ' ' . $error;
+            }
+        }
+
         foreach (array_keys($this->fields) as $field) {
             if (preg_match('/(.*?)_confirmation$/', $field, $matches)) {
                 $original   = $this->fields[$matches[1]]->get_value();
                 $confirm    = $this->fields[$field]->get_value();
                 if (strcmp($original, $confirm) !== 0) {
-                    $this->errors[] = Inflector::humanise($matches[1]) . ' does not match confirmation';
+                    $this->errors[] = self::humanise($matches[1]) . ' does not match confirmation';
                 }
             }
         }
@@ -216,7 +226,7 @@ class Contact_Form_Field
     private $trim           = false;
     private $to_upper       = false;
     private $to_lower       = false;
-    private $required       = false;
+    protected $required     = false;
     private $match          = null;
     
     public function __construct($name) {
@@ -236,7 +246,7 @@ class Contact_Form_Field
     public function format_value() { return $this->value; }
     
     public function get_label() {
-        return $this->label === null ? Form_Base::humanise($this->name) : $this->label;
+        return $this->label === null ? Contact_Form::humanise($this->name) : $this->label;
     }
     
     public function process_and_validate() {
@@ -336,8 +346,8 @@ class Contact_Form_Date extends Contact_Form_Field
         $this->value = array('day' => date('d'), 'month' => date('m'), 'year' => date('Y'));
     }
     
-    public function format($f) { $this->format = $f; }
-    public function years($min, $max) { $this->years = array($min, $max); }
+    public function format($f) { $this->format = $f; return $this; }
+    public function years($min, $max) { $this->years = array($min, $max); return $this; }
     
     public function render() {
 
@@ -440,10 +450,44 @@ class Contact_Form_Checkbox extends Contact_Form_Field
     public function format_value() { return $this->value ? 'Yes' : 'No'; }
 }
 
-class Contact_Mailer extends Form_Base
+class Contact_Form_File extends Contact_Form_Field
+{
+    private $path         = null;
+  
+    public function __construct($name) {
+        parent::__construct($name);
+    }
+  
+    public function process_and_validate() {
+        if ($this->required && $this->value === null) {
+            return "must be uploaded";
+        } else {
+            return true;
+        }
+    }
+  
+    public function render() {
+        return "<input name='{$this->name}' type='file' />";
+    }
+  
+    public function set_value($v) {
+        if (is_array($v) && is_uploaded_file($v['tmp_name'])) {
+            $this->value = $v['name'];
+            $this->path  = $v['tmp_name'];
+        } else {
+            $this->value = null;
+        }
+    }
+
+    public function get_path() {
+        return $this->path;
+    }
+}
+
+class Contact_Mailer extends Contact_Form
 {
     private $to         = 'someone@somewhere.com';
-    private $from       = 'no-reply@yoursite.com';
+    private $from       = null;
     private $subject    = 'Web Enquiry';
     private $template   = '';
     private $html       = false;
@@ -455,20 +499,31 @@ class Contact_Mailer extends Form_Base
     
     public function commit() {
         
+        $headers    = '';
         $subject    = $this->substitute($this->subject);
         $body       = $this->substitute($this->template, 'substitute_body_value');
         
-        require_once 'phpmailer/class.phpmailer.php';
+        if ($this->html) {
+            $headers .= "MIME-Version: 1.0\r\n";
+            $headers .= "Content-type: text/html; charset=iso-8859-1\r\n";
+        }
         
-        $m = new PHPMailer;
-        $m->AddAddress($this->to);
-        $m->FromName    = '[web enquiry]';
-        $m->FromAddress = $this->from;
-        $m->Subject     = $subject;
-        $m->Body        = $body;
-        if ($this->html) $m->IsHTML(true);
+        if ($this->from !== null) {
+            $headers .= "From: {$this->from}\r\n";
+        }
         
-        $m->Send();
+        foreach ($this->get_fields() as $field) {
+            // TODO: handle attachments
+            // if ($field instanceof Blade_ContactForm_File) {
+            //     $path     = $field->get_path();
+            //     $filename = $field->get_value();
+            //     if ($path && $filename) {
+            //         $m->AddAttachment($path, $filename);
+            //     }
+            // }
+        }
+        
+        @mail($to, $subject, $body, $headers);
         
     }
     
@@ -478,32 +533,29 @@ class Contact_Mailer extends Form_Base
         } else {
             return $value;
         }
-    }  
+    }
 }
 
 class Contact_CSV extends Contact_Form
 {
     private $file;
-
-    public function file($file) {
-        $this->file = $file;
-        return $this;
-    }
-
+    
+    public function file($file) { $this->file = $file; return $this; }
+    
     public function commit() {
-
+        
         if (!$fh = @fopen($this->file, 'a')) {
-            throw new Error_IO("Couldn't open CSV file {$this->file} for writing");
+            throw new Exception("Couldn't open CSV file {$this->file} for writing");
         }
-
+        
         if (!@flock($fh, LOCK_EX)) {
-            throw new Error_IO("Couldn't acquire lock on CSV file");
+            throw new Exception("Couldn't acquire lock on CSV file");
         }
-
+        
         fputcsv($fh, $this->get_formatted_data());
-
+        
         fclose($fh);
-
+        
     }
 }
 ?>
