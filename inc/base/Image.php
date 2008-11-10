@@ -8,6 +8,9 @@ class Error_UnsupportedImageType extends Exception {}
  *
  * $i = new Image('test.png');
  * $i->type('jpg')->constrain(160, 90)->grayscale()->output();
+ *
+ * @author Jason Frame
+ * @package BasePHP
  */
 class Image
 {
@@ -62,7 +65,7 @@ class Image
     }
     
     private function string_to_image_type($string) {
-        switch ($string) {
+        switch (strtolower($string)) {
             case 'gif':     return IMAGETYPE_GIF;
             case 'jpg':
             case 'jpeg':    return IMAGETYPE_JPEG;
@@ -145,7 +148,7 @@ class Image
     private function dump($filename) {
         $func = $this->get_output_function();
         $gd = $this->prepare_for_output();
-        if ($quality !== null) {
+        if ($this->quality !== null) {
             $func($gd, $filename, $this->normalise_quality($this->quality));
         } else {
             $func($gd, $filename);
