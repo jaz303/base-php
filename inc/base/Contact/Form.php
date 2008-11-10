@@ -545,11 +545,11 @@ class Contact_CSV extends Contact_Form
     public function commit() {
         
         if (!$fh = @fopen($this->file, 'a')) {
-            throw new Exception("Couldn't open CSV file {$this->file} for writing");
+            throw new Error_IO("Couldn't open CSV file {$this->file} for writing");
         }
         
         if (!@flock($fh, LOCK_EX)) {
-            throw new Exception("Couldn't acquire lock on CSV file");
+            throw new Error_IO("Couldn't acquire lock on CSV file");
         }
         
         fputcsv($fh, $this->get_formatted_data());
