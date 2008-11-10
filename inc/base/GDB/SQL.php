@@ -82,7 +82,7 @@ class GDB_SQL
      */
     public function insert($table, $values) {
         $this->gdb->x($this->sql_for_insert($table, $values));
-        return $this->last_insert_id();
+        return $this->gdb->last_insert_id();
     }
     
     /**
