@@ -21,6 +21,7 @@ function base_php_autoloader($class) {
     // START-MAP
     static $map = array (
       'Annotation' => 'base/Annotation.php',
+      'Arrays' => 'base/Arrays.php',
       'Base' => 'base/Base.php',
       'Component' => 'base/Component.php',
       'Event' => 'base/Component.php',
@@ -68,6 +69,8 @@ function base_php_autoloader($class) {
       'Test_Unit' => 'base/Test/Unit.php',
       'Model_StateError' => 'base/Model/Base.php',
       'Model_NoSuchAttributeError' => 'base/Model/Base.php',
+      'Model_RecordNotFound' => 'base/Model/Base.php',
+      'Model_RecordInvalid' => 'base/Model/Base.php',
       'Model_Base' => 'base/Model/Base.php',
       'Model_Association' => 'base/Model/Base.php',
       'Model_Association_HasOne' => 'base/Model/Base.php',
@@ -92,6 +95,16 @@ function base_php_autoloader($class) {
       'Date_Interval' => 'base/Date/Interval.php',
       'Date_Range' => 'base/Date/Range.php',
       'Date_Time' => 'base/Date/Time.php',
+      'Contact_Form' => 'base/Contact/Form.php',
+      'Contact_Form_Field' => 'base/Contact/Form.php',
+      'Contact_Form_Text' => 'base/Contact/Form.php',
+      'Contact_Form_Textarea' => 'base/Contact/Form.php',
+      'Contact_Form_Select' => 'base/Contact/Form.php',
+      'Contact_Form_Date' => 'base/Contact/Form.php',
+      'Contact_Form_Time' => 'base/Contact/Form.php',
+      'Contact_Form_Checkbox' => 'base/Contact/Form.php',
+      'Contact_Mailer' => 'base/Contact/Form.php',
+      'Contact_CSV' => 'base/Contact/Form.php',
     );
     // END-MAP
     
