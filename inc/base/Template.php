@@ -12,6 +12,10 @@
  *  * capture named blocks for later re-use
  *  * implement custom template lookup in subclasses
  *
+ * A possible use-case for before filters is to search for additional stylesheets
+ * based on the current URL hierarchy, append their contents to a block then dump
+ * it all into a <style></style> tag in the layout.
+ *
  * @todo layout rendering
  * @todo filter system
  *
