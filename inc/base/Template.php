@@ -1,6 +1,6 @@
 <?php
 /**
- * Templating class using raw PHP for templates.
+ * Lightweight templating class using raw PHP for templates.
  *
  * I've borrowed some terminology from Rails (layouts, partials, content_for)
  *
