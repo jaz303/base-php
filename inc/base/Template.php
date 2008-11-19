@@ -186,7 +186,7 @@ class Template
         throw new Exception();
     }
     
-    protected function should_apply_filters() {
+    protected function should_apply_filters($type) {
         return $this->__depth == 1;
     }
 }
