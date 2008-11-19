@@ -67,15 +67,20 @@ class Template
     }
     
     public function run_before_filters() {
-        foreach ($this->filters['before'] as $callback) {
-            $this->invoke_callback($callback, $this);
+        if ($this->should_run_filters('before')) {
+            foreach ($this->filters['before'] as $callback) {
+                $this->invoke_callback($callback, $this);
+            }
         }
     }
     
     public function run_after_filters($content) {
-        foreach ($this->filters['after'] as $callback) {
-            $content = $this->invoke_callback($callback, $content);
+        if ($this->should_run_filters('after')) {
+            foreach ($this->filters['after'] as $callback) {
+                $content = $this->invoke_callback($callback, $content);
+            }
         }
+        return $content;
     }
     
     protected function invoke_callback($callback, $argument) {
