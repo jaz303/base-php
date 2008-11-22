@@ -2,7 +2,7 @@
 // Technique borrowed from Yii Framework.
 
 $class_map = `util/generate_autoload_map inc`;
-$code = 'stack $map = ' . $class_map . ';';
+$code = 'static $map = ' . $class_map . ';';
 $code = explode("\n", $code);
 
 for ($i = 0; $i < count($code); $i++) {
