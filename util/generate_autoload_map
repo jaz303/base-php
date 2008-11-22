@@ -1,0 +1,49 @@
+#!/usr/bin/env php
+<?php
+# Trawls a directory for .php files, extracts class/interface names therefrom
+# and dumps a map of class name => relative file name.
+
+if ($_SERVER['argc'] != 2) {
+    echo "Usage: generate_autoload_map directory\n";
+    die(1);
+}
+
+$dir = $_SERVER['argv'][1];
+
+if (!is_dir($dir)) {
+    echo "Error: '$dir' is not a directory\n";
+    die(1);
+}
+
+$stack  = array($dir);
+$map    = array();
+
+while (count($stack)) {
+    
+    $current_dir = array_pop($stack);
+    $dh = opendir($current_dir);
+    
+    while (($file = readdir($dh)) !== false) {
+        
+        if ($file[0] == '.') continue;
+        
+        $file = $current_dir . '/' . $file;
+        
+        if (is_dir($file)) {
+            $stack[] = $file;
+        } elseif (preg_match('/\.php$/', $file)) {
+            $contents = file_get_contents($file);
+            $classes = preg_match_all('/^\s*(abstract\s+)?(class|interface)\s+(\w+)/m', $contents, $matches, PREG_PATTERN_ORDER);
+            foreach ($matches[3] as $class) {
+                $map[$class] = preg_replace('/^' . preg_quote($dir . '/', '/') . '/', '', $file);
+            }
+        }
+
+    }
+    
+    closedir($dh);
+    
+}
+
+var_export($map);
+?>

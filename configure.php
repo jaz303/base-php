@@ -19,7 +19,7 @@ ini_set("include_path", ".:{$root}/inc");
 function base_php_autoloader($class) {
     
     // START-MAP
-    static $map = array (
+    stack $map = array (
       'Annotation' => 'base/Annotation.php',
       'Arrays' => 'base/Arrays.php',
       'Base' => 'base/Base.php',
