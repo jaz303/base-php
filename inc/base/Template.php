@@ -58,33 +58,30 @@ class Template
     
     private $__filters          = array('before' => array(), 'after' => array());
     
-    public function before($callback) {
-        $this->__filters['before'][] = $callback;
+    public function before($arg1, $arg2 = null) {
+        $this->__filters['before'][] = Callback::create($arg1, $arg2);
     }
     
-    public function after($callback) {
-        $this->__filters['after'][] = $callback;
+    public function after($arg1, $arg2 = null) {
+        $this->__filters['after'][] = Callback::create($arg1, $arg2);
     }
     
-    public function run_before_filters() {
-        if ($this->should_run_filters('before')) {
-            foreach ($this->filters['before'] as $callback) {
-                $this->invoke_callback($callback, $this);
-            }
+    protected function before_filter() {}
+    protected function after_filter($content) { return $content; }
+    
+    protected function run_before_filters() {
+        $this->before_filter();
+        foreach ($this->__filters['before'] as $callback) {
+            $callback($this);
         }
     }
     
-    public function run_after_filters($content) {
-        if ($this->should_run_filters('after')) {
-            foreach ($this->filters['after'] as $callback) {
-                $content = $this->invoke_callback($callback, $content);
-            }
+    protected function run_after_filters($content) {
+        foreach ($this->__filters['after'] as $callback) {
+            $content = $callback($content);
         }
+        $content = $this->after_filter($content);
         return $content;
-    }
-    
-    protected function invoke_callback($callback, $argument) {
-        // TODO: implement
     }
     
     //
@@ -140,59 +137,105 @@ class Template
     //
     // Rendering
     
-    private $__depth            = 0;
+    private $__performed        = false;
+    private $__page             = null;
     
-    public function render_php($php, $locals = array()) {
+    public function render_php($__php__, $locals = array()) {
+        
         ob_start();
-        $this->display_php($php, $locals);
-        return ob_get_clean();
-    }
-    
-    public function display_php($__php__, $locals = array()) {
         self::$active[] = $this;
+        
         foreach ($this as $__k__ => $__v__) {
             if (substr($__k__, 0, 2) != '__') $$__k__ = $__v__;
         }
         if ($this->extract_locals()) extract($locals);
+        
         eval("?>$__php__");
+        
         array_pop(self::$active);
+        $output = ob_get_clean();
+        
+        return $output;
     }
     
-    public function render_file($file, $locals = array()) {
+    public function display_php($php, $locals = array()) {
+        echo $this->render_php($php, $locals);
+    }
+    
+    public function render_file($__file__, $locals = array()) {
+        
         ob_start();
-        $this->display_file($file, $locals);
-        return ob_get_clean();
-    }
-    
-    public function display_file($__file__, $locals = array()) {
         self::$active[] = $this;
+        
         foreach ($this as $__k__ => $__v__){
             if (substr($__k__, 0, 2) != '__') $$__k__ = $__v__;
         }
         if ($this->extract_locals()) extract($locals);
+        
         require $__file__;
+        
         array_pop(self::$active);
+        $output = ob_get_clean();
+        
+        return $output;
+        
     }
     
-    public function render_template($template) {
-        ob_start();
-        $this->display_template($template);
-        return ob_get_clean();
+    public function display_file($file, $locals = array()) {
+        echo $this->display_file($file, $locals);
     }
     
-    public function display_template($__template__) {
-        $this->display_file($this->resolve_template_file($__template__));
+    public function render_template($template, $locals = array()) {
+        return $this->render_file($this->resolve_template_path($template), $locals);
+    }
+    
+    public function display_template($template, $locals = array()) {
+        echo $this->render_template($template, $locals);
+    }
+    
+    public function render_page($page = null) {
+        
+        if ($this->performed()) {
+            throw new Error_IllegalState("Templates can only render pages once!");
+        }
+        
+        $this->__page = $this->resolve_template_path($page);
+        $this->run_before_filters();
+        
+        $output = $this->render_file($this->__page);
+        
+        if ($this->__layout) {
+            $this->content_for_layout = $output;
+            $output = $this->render_file($this->resolve_layout_path($this->__layout));
+        }
+        
+        $output = $this->run_after_filters($output);
+        
+        return $output;
+    
+    }
+    
+    public function display_page($page = null) {
+        echo $this->render_page($page);
+    }
+    
+    public function page() {
+        return $this->__page;
+    }
+    
+    public function performed() {
+        return $this->__page !== null;
     }
     
     //
     // Stuff to override
     
-    protected function resolve_template_file($template) {
+    protected function resolve_template_path($template) {
         throw new Exception();
     }
     
-    protected function should_apply_filters($type) {
-        return $this->__depth == 1;
+    protected function resolve_layout_path($template) {
+        return $this->resolve_template_path($template);
     }
 }
 ?>
