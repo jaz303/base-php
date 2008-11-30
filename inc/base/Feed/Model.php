@@ -14,11 +14,14 @@ class Feed implements IteratorAggregate, Countable
     // Call with no params to retrieve the value, or with one
     // param to set new value and return $this (i.e. chainable)
     private $title              = null;
+    private $subtitle           = null;
     private $link               = null;
     private $copyright          = null;
     private $description        = null;
     private $date               = null;
     private $language           = null;
+    private $author_name        = null;
+    private $author_email       = null;
     
     private $items              = array();
     

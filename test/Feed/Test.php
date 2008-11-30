@@ -9,6 +9,10 @@ class Feed_Test extends Test_Unit
         $this->test_csg('title');
     }
     
+    public function test_subtitle() {
+        $this->test_csg('subtitle');
+    }
+    
     public function test_link() {
         $this->test_csg('link');
     }
@@ -23,6 +27,14 @@ class Feed_Test extends Test_Unit
     
     public function test_language() {
         $this->test_csg('language');
+    }
+    
+    public function test_author_name() {
+        $this->test_csg('author_name');
+    }
+    
+    public function test_author_email() {
+        $this->test_csg('author_email');
     }
     
     public function test_date() {
