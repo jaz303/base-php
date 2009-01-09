@@ -6,16 +6,18 @@ BasePHP is a small, general PHP class library. It's written to take advantage of
 
 Main features:
 
+* Functional programming primitives (e.g. map(), filter(), every(), inject()) taking advantage of 5.3's new support for lamdba functions/closures
 * Object oriented database access with support for:
-* * lazy connection via instance registry
-* * smart(er) automatic value quoting
-* * exception wrapping for catching constraint violations
-* * automatic conversion/instantiation of boolean/date types
-* * emulated nested transactions and queued filesystem operations
+** lazy connection via instance registry
+** smart(er) automatic value quoting
+** exception wrapping for catching constraint violations
+** automatic conversion/instantiation of boolean/date types
+** emulated nested transactions and queued filesystem operations
 * Class/method annotation using JSON fragments
 * Date classes
 * Powerful "rewire" feature which automatically creates wrapper objects for file uploads (coming soon: date and currency)
 * Image class supporting chainable operations, resizing, cropping and filtering
+* Currency class
 * Active-record style model class with reflection-based plugin mechanism
 
 BasePHP makes heavy use of __autoload() - if you don't like this, this library isn't for you.
