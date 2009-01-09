@@ -39,6 +39,7 @@ function map($iterable, $lambda) {
 function kmap($iterable, $lambda) {
     $out = array();
     foreach ($iterable as $k => $v) $out[$k] = $lambda($v);
+    return $out;
 }
 
 function inject($iterable, $memo, $lambda) {
