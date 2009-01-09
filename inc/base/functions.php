@@ -1,4 +1,7 @@
 <?php
+//
+// Functional programming primitives
+
 // returns true iff $lambda($v) returns true for all values $v in $iterable
 function all($iterable, $lambda) {
     foreach ($iterable as $v) {
