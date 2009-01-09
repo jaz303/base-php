@@ -8,7 +8,8 @@ class Test_Suite
 		$this->name = $name;	
 	}
 	
-	public function require_all($dir = 'test') {
+	public function require_all($dir = 'test', $extensions = array('php')) {
+	    $ext_match = '/\.(' . implode('|', $extensions) . ')$/'; 
 		$stack = array($dir);
 		while (count($stack)) {
 			$dir = array_pop($stack);
@@ -18,8 +19,8 @@ class Test_Suite
 				$fqd = $dir . DIRECTORY_SEPARATOR . $file;
 				if (is_dir($fqd)) {
 					$stack[] = $fqd;
-				} else {
-					require $fqd;
+				} elseif (preg_match($ext_match, $fqd)) {
+                    require $fqd;
 				}
 			}
 			closedir($dh);
