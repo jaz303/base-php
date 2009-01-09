@@ -44,25 +44,25 @@ class functions_functionalTest extends Test_Unit
     }
     
     public function test_filter() {
-        assert_equal(array(2, 4), filter(array(1,2,3,4), function($v) { return $v % 2 == 0 }));
+        assert_equal(array(2, 4), filter(array(1,2,3,4), function($v) { return $v % 2 == 0; }));
     }
     
     public function test_kfilter() {
         assert_equal(array('b' => 2, 'd' => 4),
                         filter(array('a' => 1, 'b' => 2, 'c' => 3, 'd' => 4), function($v) {
-                            return $v % 2 == 0
+                            return $v % 2 == 0;
                         })
                     );
     }
     
     public function test_reject() {
-        assert_equal(array(1, 3), filter(array(1,2,3,4), function($v) { return $v % 2 == 0 }));
+        assert_equal(array(1, 3), filter(array(1,2,3,4), function($v) { return $v % 2 == 0; }));
     }
     
     public function test_kreject() {
         assert_equal(array('a' => 1, 'c' => 3),
                         filter(array('a' => 1, 'b' => 2, 'c' => 3, 'd' => 4), function($v) {
-                            return $v % 2 == 0
+                            return $v % 2 == 0;
                         })
                     );
     }
