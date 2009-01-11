@@ -1,5 +1,26 @@
 <?php
 //
+// Simple helpers
+
+function int_or_null($i) {
+    return $i === null ? null : (int) $i;
+}
+
+function trim_to($str, $len) {
+    return substr(trim($str), 0, $len);
+}
+
+function trim_or_null($str, $len = null) {
+    if ($str === null) return null;
+    return trim_to($str, $len ? $len : strlen($str));
+}
+
+function trim_to_null($str, $len = null) {
+    $str = trim_to($str, $len ? $len : strlen($str));
+    return strlen($str) ? $str : null;
+}
+
+//
 // Functional programming primitives
 
 // returns true iff $lambda($v) returns true for all values $v in $iterable
