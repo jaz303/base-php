@@ -48,7 +48,7 @@ abstract class Callback
                     return new InstanceCallback($arg1[0], $arg1[1]);
                 }
             }
-        } else {
+        } elseif (is_string($arg2)) {
             if (is_object($arg1)) {
                 return new InstanceCallback($arg1, $arg2);
             } elseif (is_string($arg1)) {
