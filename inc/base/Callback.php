@@ -41,7 +41,7 @@ abstract class Callback
                 } else {
                     return new FunctionCallback($arg1);
                 }
-            } elseif (is_array($arg1)) {
+            } elseif (is_array($arg1) && count($arg1) == 2 && is_string($arg1[1])) {
                 if (is_string($arg1[0])) {
                     return new StaticCallback($arg1[0], $arg1[1]);
                 } elseif (is_object($arg1[0])) {
