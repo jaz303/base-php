@@ -4,13 +4,17 @@ if (!defined('LOGGER_DEFAULT_CLASS')) {
 }
 
 if (!defined('LOGGER_DEFAULT_FILE')) {
-    define('LOGGER_DEFAULT_FILE', 'STDERR');
+    define('LOGGER_DEFAULT_FILE', 'php://stderr');
+}
+
+if (!defined('LOGGER_DEFAULT_THRESHOLD')) {
+    define('LOGGER_DEFAULT_THRESHOLD', 3);
 }
 
 abstract class Logger
 {
     private static $default_logger;
-    
+
     public static function get() {
         if (self::$default_logger === null) {
             $logger = LOGGER_DEFAULT_CLASS;
@@ -24,7 +28,18 @@ abstract class Logger
     const WARN      = 3;
     const ERROR     = 4;
     
-    public abstract function log($level, $message);
+    private $threshold;
+    
+    public function __construct($threshold = null) {
+        if ($threshold === null) $threshold = LOGGER_DEFAULT_THRESHOLD;
+        $this->threshold = (int) $threshold;
+    }
+    
+    public function log($level, $message) {
+        if ($level >= $this->threshold) $this->do_log($level, $message);
+    }
+    
+    protected abstract function do_log($level, $message);
     
     public function debug($message) {
         $this->log(self::DEBUG, $message);
@@ -45,33 +60,24 @@ abstract class Logger
 
 class BlackholeLogger extends Logger
 {
-    public function log($level, $message) {}
+    protected function do_log($level, $message) {}
 }
 
 class FileLogger extends Logger
 {
     private $fd;
     
-    public function __construct($file) {
-        if (is_resource($file)) {
-            $this->fd = $file;
-        } else {
-            switch ($file) {
-                case 'STDERR':
-                    $this->fd = STDERR;
-                    break;
-                case 'STDOUT':
-                    $this->fd = STDOUT;
-                    break;
-                default:
-                    if (!$this->fd = fopen($file, 'a')) {
-                        throw new Error_IO("Cannot open log file $file for writing");
-                    }
+    public function __construct($file, $threshold = null) {
+        parent::__construct($threshold);
+        if (!is_resource($file)) {
+            if (!$file = fopen($file, 'a')) {
+                throw new Error_IO("Cannot open log file for writing");
             }
         }
+        $this->fd = $file;
     }
     
-    public function log($level, $message) {
+    protected function do_log($level, $message) {
         fwrite($this->fd, $level . ' ' . time() . ' ' . $message . "\n");
     }
 }

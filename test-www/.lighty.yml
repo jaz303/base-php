@@ -1,0 +1,4 @@
+php:
+    enabled: true
+    version: 5_3_0
+directory_listing: true
