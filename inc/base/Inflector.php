@@ -1,6 +1,14 @@
 <?php
 class Inflector
 {
+    public static function pluralize($count, $singular, $plural = null) {
+        if ($count == 1) {
+            return $singular;
+        } else {
+            return $plural === null ? ($singular . 's') : $plural;
+        }
+    }
+    
     public static function humanize($string) {
         return ucfirst(strtolower(str_replace(array('_', '-'), ' ', $string)));
     }
@@ -10,7 +18,7 @@ class Inflector
      * already_underscored -> already_underscored
      */
     public static function underscore($string) {
-        return strtolower(preg_replace('/([^^])([A-Z])/e', '"$1" . "_" . "$2"', $string));
+        return strtolower(preg_replace('/([^^])([A-Z])/e', '\1_\2', $string));
     }
     
     /**
