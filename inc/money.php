@@ -20,7 +20,12 @@ class Money
     //
     // Currencies
     
-    private static $CURRENCIES = array
+    /**
+     * Defines a map of known currencies. Entry format is:
+     *
+     * currency_code => array(units_per_major, text_symbol, html_symbol)
+     */
+    public static $CURRENCIES = array
     (
         'GBP' => array(100, '£', '&pound;'),
         'USD' => array(100, '$', '$'),
@@ -99,12 +104,17 @@ class Money
         return $this->currency;
     }
     
-    public function convert_to($currency) {
-        if (self::$bank === null) {
-            throw new MoneyConversionException("Bank not available");
-        } else {
-            return self::$bank->convert($this, $currency);
-        }
+    /**
+     * Converts this value to some other currency
+     *
+     * @param $currency target currency code
+     * @param $bank bank used to perform conversion, if null default bank will be used
+     * @return converted currency
+     * @throws MoneyConversionException if conversion is impossible
+     */
+    public function convert_to($currency, $bank = null) {
+        if ($bank === null) $bank = self::get_bank();
+        return $bank->convert($this, $currency);
     }
     
     //
@@ -123,6 +133,9 @@ class Money
      * Any other % formats which do not match exactly options above will be
      * passed to sprintf, which will receive a floating point version for
      * formatting.
+     *
+     * @param $string format string
+     * @return formatted currency string
      */
     public function format($string) {
         
@@ -146,6 +159,11 @@ class Money
     //
     //
     
+    /**
+     * Returns true if this value is zero
+     *
+     * @return true if this value is zero, false otherwise
+     */
     public function is_zero() {
         return $this->units == 0;
     }
