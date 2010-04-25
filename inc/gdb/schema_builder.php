@@ -42,16 +42,17 @@ class SchemaBuilder
     }
     
     public function drop_table($table_name) {
-        $this->db->x("DROP TABLE {n}", $table_name);
+        $this->db->x("DROP TABLE " . $this->db->quote_ident($table_name));
     }
     
     public function add_column($table, $column_name, $type, $options = array()) {
         $def = $this->column_definition($column_name, $type, $options);
-        $this->db->x("ALTER TABLE {n} ADD COLUMN $def", $table);
+        $this->db->x("ALTER TABLE " . $this->db->quote_ident($table) . " ADD COLUMN $def");
     }
     
     public function remove_column($table, $column_name) {
-        $this->db->x("ALTER TABLE {n} DROP COLUMN {n}", $table, $column_name);
+        $this->db->x("ALTER TABLE " . $this->db->quote_ident($table) . "
+                      DROP COLUMN " . $this->db->quote_ident($column_name));
     }
     
     public function rename_column($table, $existing_column_name, $new_column_name) {

@@ -240,19 +240,47 @@ class GDB
     
     public function quote_date($value) {
         if ($value === NULL) return 'NULL';
-        return Date::parse($value)->to_sql();
+        return $this->quote_string(Date::parse($value)->to_sql());
     }
     
     public function quote_datetime($value) {
         if ($value === NULL) return 'NULL';
-        return Date_Time::parse($value)->to_sql();
+        return $this->quote_string(Date_Time::parse($value)->to_sql());
     }
     
     //
     // Query Helpers
     
+    /**
+     * 
+     *
+     */
+    public function select_value() {
+        
+    }
     
+    /**
+     * Inserts a row into a table
+     *
+     * @param $table table name to insert into
+     * @param $values associative array of field => value. array will be passed to
+     *        $this->auto_quote_array() so keys may contain type info, for example
+     *        's:username'.
+     * @return ID of inserted row, if available
+     * @throws GDBException on failure
+     */
+    public function insert($table, $values) {
+        $values = $this->auto_quote_array($values);
+        $sql  = "INSERT INTO " . $this->quote_ident($table);
+        $sql .= ' (' . implode(',', array_keys($values)) . ')';
+        $sql .= ' VALUES (' . implode(',', array_values($values)) . ')';
+        $this->x($sql);
+        return $this->last_insert_id();
+    }
     
+    public function update($table, $values) {
+        
+    }
     
     //
     //
@@ -260,9 +288,96 @@ class GDB
     public function new_schema_builder() {
         return new gdb\SchemaBuilder($this);
     }
+    
+    //
+    // Transaction support
+    
+    private $tx_active  = false;
+    
+    public function in_transaction() { return $this->tx_active; }
+    
+    /**
+     * Begins a new transaction and executes the given anonymous function.
+     * If the anonymous function throws an exception, transaction will be rolled
+     * back and exception is re-thrown. Otherwise, transaction is committed.
+     *
+     * @see with_transaction() if you wish to "nest" transactions
+     *
+     * @param $lambda anonymous function to run within transaction
+     */
+    public function transaction($lambda) {
+        $this->begin();
+        try {
+            $lambda();
+            $this->commit();
+        } catch (\Exception $e) {
+            $this->rollback();
+            throw $e;
+        }
+    }
+    
+    /**
+     * Runs a given anonymous function, starting a new transaction if none is already
+     * active.
+     *
+     * If you're using this method to create nested transactions be sure to always throw
+     * an exception to indicate failure so that the outermost handler knows to rollback
+     * the physical transaction.
+     *
+     * @param $lambda anonymous function to run
+     */
+    public function with_transaction($lambda) {
+        if ($this->in_transaction()) {
+            $lambda();
+        } else {
+            $this->transaction($lambda);
+        }
+    }
+    
+    /**
+     * Begin a new transaction.
+     *
+     * @throws GDBException if a transaction is already active
+     */
+    public function begin() {
+        if ($this->tx_active) {
+            throw new GDBException("can't begin new transaction");
+        } else {
+            $this->x('BEGIN');
+            $this->tx_active = true;
+        }
+    }
+    
+    /**
+     * Commit the active transaction.
+     *
+     * @throws GDBException if no transaction is active
+     */
+    public function commit() {
+        if ($this->tx_active) {
+            $this->x('COMMIT');
+            $this->tx_active = false;
+        } else {
+            throw new GDBException("can't commit, no active transaction");
+        }
+    }
+    
+    /**
+     * Rollback the active transaction.
+     *
+     * @throws GDBException if no transaction is active
+     */
+    public function rollback() {
+        if ($this->tx_active) {
+            $this->x('ROLLBACK');
+            $this->tx_active = false;
+        } else {
+            throw new GDBException("can't commit, no active transaction");
+        }
+    }
 }
 
-class GDBMySQL
+class GDBMySQL extends GDB
 {
     private $link;
     
@@ -429,13 +544,21 @@ abstract class GDBResult implements Iterator, Countable
     
     /**
      * Configure the mechanism used to transform result arrays into output.
-     * Valid modes are array, object and value.
+     * Valid modes: array (default), object and value.
+     *
      */
     public function mode($mode, $ident, $options = array()) {
         $this->mode         = $mode;
         $this->mode_ident   = $ident;
         $this->mode_options = $options;
         return $this;
+    }
+    
+    /**
+     * Returns the first (filtered) row from this result
+     */
+    public function row() {
+        foreach ($this as $v) return $v;
     }
     
     /**
@@ -576,7 +699,7 @@ class GDBResultMySQL extends GDBResult
                 $this->map[$name] = 'date';
             } elseif ($field->type == 'datetime') {
                 $this->map[$name] = 'datetime';
-            } elseif ($field->type == 'int' && mysql_field_len($native_result, $c)) {
+            } elseif ($field->type == 'int' && mysql_field_len($native_result, $c) == 1) {
                 $this->map[$name] = 'boolean';
             }
             $c++;
