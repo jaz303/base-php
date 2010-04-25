@@ -6,11 +6,16 @@
  * breaking applications. For this reason, your application should tolerate
  * non-existent countries through use of default values (i.e. 'Unknown'), or
  * by checking using exists() - whichever is most appropriate.
+ *
+ * @author Jason Frame
+ * @package BasePHP
  */
 class ISO_Country
 {
 	/**
 	 * Returns an array of all country codes.
+	 *
+	 * @return array of all country codes
 	 */
 	public static function codes() {
 		return array_keys(self::$codes);	
@@ -23,6 +28,10 @@ class ISO_Country
 	 * country list is used, $separator can be used to place a separator entry
 	 * between the preferred list and the rest. The key value for the separator
 	 * will always be the empty string.
+	 *
+	 * @param $pref array of preferred country codes to be moved to start of output array
+	 * @param $sep separator value to be placed in between preferred codes and cons
+	 * @return sorted associative array of all country names
 	 */
 	public static function names($pref = null, $sep = null) {
 		if ($pref !== null) {
@@ -38,6 +47,9 @@ class ISO_Country
 
 	/**
 	 * Returns true if the specified country code exists.
+	 *
+	 * @param $code country to check for
+	 * @return true if country code exists, false otherwise
 	 */
 	public static function exists($code) {
 		return isset(self::$codes[$code]);
@@ -48,16 +60,12 @@ class ISO_Country
 	 * If $default is supplied, and the code does not exist, $default will
 	 * be returned. Otherwise, if $code does not exist, an exception will be
 	 * thrown.
+	 *
+	 * @param $code country code to retrieve name for
+	 * @param $default default text to return if country does not exist
 	 */
 	public static function name_for($code, $default = null) {
-		if (!self::exists($code)) {
-			if ($default === null) {
-				throw new Error_NoSuchElement("Country code '$code' does not exist");
-			} else {
-				return $default;
-			}
-		}
-		return self::$codes[$code];
+	    return self::exists($code) ? self::$codes[$code] : $default;
 	}
 	
 	//
