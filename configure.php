@@ -66,5 +66,4 @@ function base_php_autoloader($class) {
 }
 
 spl_autoload_register('base_php_autoloader');
-require 'base/functions.php';
 ?>
