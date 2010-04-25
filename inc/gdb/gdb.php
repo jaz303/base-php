@@ -5,11 +5,6 @@
 class GDBException extends Exception {}
 
 /**
- * Exception (optionally) thrown when a transaction is rolled back
- */
-class GDBRollbackException extends GDBException {}
-
-/**
  * Exception thrown when a query results in an error
  */
 class GDBQueryException extends GDBException {}
