@@ -11,6 +11,8 @@ Main features:
 ** smart(er) automatic value quoting
 ** exception wrapping for catching constraint violations
 ** automatic conversion/instantiation of boolean/date types
+** table creation
+** migrations
 * Date & time classes
 * Powerful "rewire" feature which automatically creates wrapper objects for file uploads and submitted date/currency values
 * Currency class
