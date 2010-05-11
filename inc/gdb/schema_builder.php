@@ -9,6 +9,13 @@ class SchemaBuilder
         $this->db = $db;
     }
     
+    public function table_exists($table) {
+        $r = $this->db->q("SHOW TABLES LIKE " . $this->db->quote_string($table));
+        $e = $r->row_count() > 0;
+        $r->free();
+        return $e;
+    }
+    
     public function create_table(TableDefinition $table) {
         $this->db->x($this->sql_for_table($table));
     }
