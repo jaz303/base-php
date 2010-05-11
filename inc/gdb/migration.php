@@ -3,11 +3,13 @@ namespace gdb;
 
 class Migration
 {
+    public static $instance_name = 'default';
+    
     protected $db;
     protected $builder;
     
     public function __construct() {
-        $this->db = GDB::instance();
+        $this->db = GDB::instance(self::$instance_name);
         $this->builder = $this->db->new_schema_builder();
     }
     
@@ -46,6 +48,14 @@ class Migration
     
     protected function rename_column($table, $existing_column_name, $new_column_name) {
         $this->schema_builder->rename_column($table, $existing_column_name, $new_column_name);
+    }
+    
+    protected function add_index($table, $column_names, $options = array()) {
+        $this->schema_builder->add_index($table, $column_names, $options);
+    }
+    
+    public function remove_index($table, $index_name) {
+        $this->schema_builder->remove_index($table, $index_name);
     }
 }
 ?>

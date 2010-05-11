@@ -23,7 +23,7 @@ class TableDefinition
     public function get_columns() { return $this->columns; }
     
     public function set_primary_key($primary_key) {
-        $this->primary_key = $primary_key;
+        $this->primary_key = is_array($primary_key) ? $primary_key : func_get_args();
     }
     
     public function column($name, $type, $options) {

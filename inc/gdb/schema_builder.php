@@ -5,39 +5,43 @@ class SchemaBuilder
 {
     private $db;
     
-    public function __construct(GDB $db) {
+    public function __construct(\GDB $db) {
         $this->db = $db;
     }
     
     public function create_table(TableDefinition $table) {
+        $this->db->x($this->sql_for_table($table));
+    }
+    
+    public function sql_for_table(TableDefinition $table) {
         
         $sql  = "CREATE TABLE " . $this->db->quote_ident($table->get_name()) . "\n";
         $sql .= "(\n";
         
         $chunks = array();
         foreach ($table->get_columns() as $column) {
-            $chunks .= $this->column_definition($column['name'],
+            $chunks[] = $this->column_definition($column['name'],
                                                 $column['type'],
                                                 $column['options']);
         }
         
         if ($pk = $table->get_primary_key()) {
-            $chunks .= "PRIMARY KEY (" . implode(', ', array_map(array($this->db, 'quote_ident'), (array) $pk)) . ")";
+            $chunks[] = "PRIMARY KEY (" . implode(', ', array_map(array($this->db, 'quote_ident'), (array) $pk)) . ")";
         }
         
-        $sql .= "  " . implode("\n  ", $chunks);
+        $sql .= "  " . implode(",\n  ", $chunks);
         $sql .= "\n)\n";
         
         $raw_options = $table->get_options();
         $table_options = array();
         
         if (isset($raw_options['mysql.engine'])) {
-            $table_options[] = 'ENGINE = ' . $raw_options['mysql.engine'];
+            $table_options[] = 'ENGINE = ' . $raw_options['mysql.engine'] . "\n";
         }
         
         $sql .= implode(', ', $table_options);
         
-        $this->db->x($sql);
+        return $sql;
         
     }
     
@@ -57,6 +61,32 @@ class SchemaBuilder
     
     public function rename_column($table, $existing_column_name, $new_column_name) {
         // TODO
+    }
+    
+    public function add_index($table, $column_names, $options = array()) {
+        $sql = 'CREATE';
+        if (@$options['unique'])    $sql .= ' UNIQUE';
+        if (@$options['fulltext'])  $sql .= ' FULLTEXT';
+        if (@$options['spatial'])   $sql .= ' SPATIAL';
+        $sql .= ' INDEX ';
+        
+        if (!isset($options['name'])) {
+            $cols = (array) $column_names;
+            sort($cols);
+            $options['name'] = implode('_', $cols) . '_index';
+        }
+        
+        $sql .= $this->db->quote_ident($options['name']);
+        
+        $sql .= ' ON ' . $this->db->quote_ident($table);
+        $sql .= ' (' . implode(', ', array_map(array($this->db, 'quote_ident'), (array) $column_names)) . ')';
+        
+        $this->db->x($sql);
+    }
+    
+    public function remove_index($table, $index_name) {
+        $sql = 'DROP INDEX ' . $this->db->quote_ident($index_name) . ' ON ' . $this->db->quote_ident($table);
+        $this->db->x($sql);
     }
     
     protected function column_definition($name, $type, $options) {
@@ -117,7 +147,7 @@ class SchemaBuilder
             default:        throw new IllegalArgumentException("unknown MySQL size for int column");
         }
         if (isset($options['limit'])) {
-            $type .= '(' + $options['limit'] . ')';
+            $type .= '(' . $options['limit'] . ')';
         }
         return $type . $this->default_options('integer', $options);
     }
@@ -165,8 +195,8 @@ class SchemaBuilder
             }
         }
         
-        if (isset($options['default'])) {
-            
+        if (array_key_exists('default', $options)) {
+            $native_options .= ' DEFAULT ' . $this->db->quote($type, $options['default']);
         }
         
         return $native_options;

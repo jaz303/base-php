@@ -207,6 +207,11 @@ class GDB
         return $out;
     }
     
+    public function quote($type, $value) {
+        $method = self::$quote_methods[$type];
+        return $this->$method($value);
+    }
+    
     public function quote_string($value) {
         return $value === NULL ? 'NULL' : ('\'' . addslashes($value) . '\'');
     }
