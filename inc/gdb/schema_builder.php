@@ -9,6 +9,14 @@ class SchemaBuilder
         $this->db = $db;
     }
     
+    public function create_database($db) {
+        $this->db->x('CREATE DATABASE ' . $this->db->quote_ident($db));
+    }
+    
+    public function drop_database($db) {
+        $this->db->x('DROP DATABASE ' . $this->db->quote_ident($db));
+    }
+    
     public function table_exists($table) {
         $r = $this->db->q("SHOW TABLES LIKE " . $this->db->quote_string($table));
         $e = $r->row_count() > 0;

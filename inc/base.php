@@ -6,7 +6,7 @@ class IllegalArgumentException extends Exception {}
 class IllegalStateException extends Exception {}
 class IOException extends Exception {}
 class NotFoundException extends Exception {}
-class SecurityException extends Exeption {}
+class SecurityException extends Exception {}
 class SyntaxException extends Exception {}
 class UnsupportedOperationException extends Exception {}
 
