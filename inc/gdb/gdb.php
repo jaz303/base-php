@@ -152,7 +152,7 @@ class GDB
         $replace_pos  = 0;
         $self = $this;
         
-        return preg_replace_callback('/{(!?=)?(i|f|b|s|x|dt?)(:(\w+))?}/',
+        return preg_replace_callback('/{(!?=)?(\w+)(:(\w+))?}/',
             function($m) use ($replace_args, &$replace_pos, $self) {
             
                 $index = isset($m[4]) ? $m[4] : $replace_pos++;
@@ -162,7 +162,10 @@ class GDB
                 }
             
                 $value = $replace_args[$index];
-                $quote_method = GDB::$quote_methods[$m[2]];
+                $quote_method = self::$quote_methods[$m[2]];
+                if (!$quote_method) {
+                    throw new InvalidArgumentException("'$m[2]' is not a valid auto-quote type specifier");
+                }
 
                 if (!$m[1]) {
                     $out = '';
