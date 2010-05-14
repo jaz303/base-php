@@ -1,20 +1,17 @@
 <?php
 /**
- * Internally, <tt>Date</tt> represents weekdays as integers 1..7, 1 denoting
- * Monday. You can modify this by defining DATE_WEEK_START.
+ * BasePHP's Date/Date_Time classes wrap around PHP's own DateTime implementation whose
+ * API, IMO, is ghastly.
+ *
+ * Main differences:
+ *   1. This implementation is immutable
+ *   2. Accessor methods for component parts
+ *   3. Distinction between date and date-and-time 
+ *
+ * @todo add/subtract intervals
+ * @todo get interval between two dates
+ * @todo timezone conversion
  */
-if (!defined('DATE_WEEK_START')) {
-    define('DATE_WEEK_START', 1);
-}
-
-/** 
- * You can also offset this weekday value. For example, set this to -1 if you
- * want to deal with day numbers 0..6.
- */
-if (!defined('DATE_WEEK_OFFSET')) {
-    define('DATE_WEEK_OFFSET', 0);
-}
-
 class Date
 {
     //
@@ -33,9 +30,17 @@ class Date
     const W3C      = 'Y-m-d\TH:i:sP';
     
     //
-    //
+    // Some variations
     
-    private static $default_timezone = null;
+    const ISO8601_DATE                      = 'Y-m-d';
+    const ISO8601_DATE_TIME                 = 'Y-m-d\TH:i:s';
+    const ISO8601_DATE_TIME_WITH_TIMEZONE   = 'Y-m-d\TH:i:sO';
+    
+    //
+    // Default
+    
+    private static $default_timezone    = null;
+    private static $utc_timezone        = null;
     
     public static function default_timezone() {
         if (self::$default_timezone === null) {
@@ -44,176 +49,165 @@ class Date
         return self::$default_timezone;
     }
     
-    public static function parse() {
-        
+    public static function utc_timezone() {
+        if (self::$utc_timezone === null) {
+            self::$utc_timezone = new DateTimeZone('UTC');
+        }
+        return self::$utc_timezone;
     }
     
     //
-    //
+    // Request parsing
     
-    public static function is_leap_year($year) {
-        return ($year % 4 == 0) && (($year % 100 != 0) || ($year % 400 == 0));
-    }
-
-    public static function days_for_month($month, $year = null) {
-        if ($year === null) $year = date('Y');
-        if ($month == 2) {
-            return self::is_leap_year($year) ? 29 : 28;
-        } else {
-            return self::$month_days[$month];
+    public static function from_request($value) {
+        $class = get_called_class();
+        try {
+            if (empty($value)) { // nothing submitted
+                return null;
+            } elseif (is_array($value)) {
+                if (isset($value['year'])) {
+                    if (isset($value['month']) && isset($value['day'])) {
+                        $args = array($value['year'], $value['month'], $value['day']);
+                        if (isset($value['hours']) && isset($value['minutes']) && isset($value['seconds'])) {
+                            $args[] = $value['hours'];
+                            $args[] = $value['minutes'];
+                            $args[] = $value['seconds'];
+                            if (isset($value['timezone'])) {
+                                $args[] = $value['timezone'];
+                            }
+                        }
+                        return new $class($args);
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return new $class($value);
+                }
+            } else { // assume string
+                if (is_numeric($value)) $value = '@' . $value; // unix timestamp
+                return new $class($value);
+            }
+        } catch (InvalidArgumentException $e) {
+            return null;
         }
     }
-
-    private static $month_days = array(
-        1   => 31,
-        2   => null,
-        3   => 31,
-        4   => 30,
-        5   => 31,
-        6   => 30,
-        7   => 31,
-        8   => 31,
-        9   => 30,
-        10  => 31,
-        11  => 30,
-        12  => 31
-    );
     
-    //
-    //
-    
-    protected $y, $m, $d, $h, $i, $s;
-    protected $timezone;
-    
-    protected $utc;
-    protected $weekday = null;
-    protected $unix = null;
-    
-    public function __construct($y, $m, $d, $tz = null) {
-        $this->set_timezone($tz);
-        $this->set_date($y, $m, $d);
-        $this->set_time(0, 0, 0);
-    }
-    
-    //
-    // Components
-    
-    public function year() { return $this->y; }
+    // Native DateTime instance
+	protected $native = null;
+	
+	protected $y, $m, $d, $h, $i, $s;
+	protected $timezone;
+	
+	public function __construct($args = null) {
+	    if (!is_array($args)) $args = func_get_args();
+	    switch (func_num_args()) {
+			case 0: // now
+			    $this->native = new DateTime;
+			    break;
+			case 1: // native DateTime object or string
+			    if ($args[0] instanceof DateTime) {
+			        $this->native = $args[0];
+			    } else {
+			        $this->native = new DateTime($args[0]);
+			    }
+			    break;
+			case 2: // string/null + timezone
+			    $this->native = new DateTime($args[0], $args[1]);
+			    break;
+			case 3: // y/m/d
+			    $this->set_date($args[0], $args[1], $args[2]);
+			    $this->set_timezone(null);
+			    break;
+			case 4: // y/m/d + timezone
+			    $this->set_date($args[0], $args[1], $args[2]);
+			    $this->set_timezone($args[3]);
+			    break;
+			case 6: // y/m/d/h/i/s
+			    $this->set_date($args[0], $args[1], $args[2]);
+			    $this->set_time($args[3], $args[4], $args[5]);
+			    $this->set_timezone(null);
+			    break;
+			case 7: // y/m/d/h/i/s + timezone
+    		    $this->set_date($args[0], $args[1], $args[2]);
+    		    $this->set_time($args[3], $args[4], $args[5]);
+			    $this->set_timezone($args[6]);
+			default:
+				throw new InvalidArgumentException();
+		}
+		
+		if ($this->native === null) {
+		    $this->native = new DateTime(
+		        sprintf(
+		            "%04d-%02d-%02dT%02d:%02d:%02d",
+		            $this->y, $this->m, $this->d,
+		            $this->h, $this->i, $this->s
+		        ),
+		        $this->timezone
+		    );
+		} else {
+		    $this->y = $this->native->format('Y');
+		    $this->m = $this->native->format('m');
+		    $this->d = $this->native->format('d');
+		    $this->set_time($this->native->format('h'),
+		                    $this->native->format('i'),
+		                    $this->native->format('s'));
+		    $this->timezone = $this->native->getTimezone();
+		}
+		
+	}
+	
+	public function year() { return $this->y; }
     public function month() { return $this->m; }
     public function day() { return $this->d; }
     public function hours() { return $this->h; }
     public function minutes() { return $this->i; }
     public function seconds() { return $this->s; }
-    public function timezone() { }
+    public function timezone() { return $this->timezone; }
     
-    public function weekday() {
-        
-        if ($this->weekday === null) {
-            
-            if ($this->month < 3) {
-                $m = $this->month + 12;
-                $y = $this->year - 1;
-            } else {
-                $m = $this->month;
-                $y = $this->year;
-            }
-
-            $ret = ($this->d +
-                        (2 * $m) +
-                        floor(6 * ($m + 1) / 10) +
-                        $y +
-                        floor($y / 4) -
-                        floor($y / 100) +
-                        floor($y / 400)) % 7;
-
-            $this->weekday = $this->adjust_day($ret);
-            
-        }
-        
-        return $this->weekday;
-
-    }
-
-    public function leap_year() {
-        return self::is_leap_year($this->y);
-    }
-
-    public function days_in_month() {
-        return self::days_for_month($this->m, $this->y);
-    }
+    public function weekday() { return (int) $this->native->format('w'); }
+    public function is_leap_year() { return (bool) $this->native->format('L'); }
+    public function days_in_month() { return (int) $this->native->format('t'); }
+    public function is_utc() { return $this->timezone->getName() == 'UTC'; }
+    public function timestamp() { return $this->native->getTimestamp(); }
+    public function format($f) { return $this->native->format($f); }
     
-    public function is_utc() {
-        return $this->utc;
-    }
+    public function iso_date() { return $this->native->format(self::ISO8601_DATE); }
+    public function iso_date_time() { return $this->native->format(self::ISO8601_DATE_TIME); }
+    public function iso_date_time_with_timezone() { return $this->native->format(self::ISO8601_DATE_TIME_WITH_TIMEZONE); }
     
-    public function timestamp() {
-        if ($this->unix === null) {
-            if ($this->y < 1970) throw new IllegalStateException("can't get timestamps for dates before 1970");
-            
-        }
-        return $this->unix;
-    }
+    public function to_date() { return $this; }
+    public function to_date_time() { return new Date_Time($this->native); }
     
-    //
-    // Conversions
-    
-    public function format($format) {
-        
-    }
-    
-    public function to_utc() {
-        if ($this->is_utc()) {
+    public function to_timezone($tz) {
+        $tz = is_string($tz) ? new DateTimeZone($tz) : $tz;
+        if ($tz->getName() == $this->timezone->getName()) {
             return $this;
         } else {
-            // TODO: 
+            $dt = clone $this->native;
+            $dt->setTimezone($tz);
+            return new self($dt);
         }
     }
     
-    public function to_date() {
-        return $this;
-    }
-    
-    public function to_date_time() {
-        return new Date_Time($this->y, $this->m, $this->d, 0, 0, 0);
-    }
-     
-    //
-    // Relative dates/times
-    
-    public function midnight() {
-        return $this->create_new($this->year(), $this->month(), $this->day(), 0, 0, 0);
-    }
-
-    public function beginning_of_month() {
-        return $this->create_new($this->year(), $this->month(), 1, 0, 0, 0);
-    }
-
-    public function beginning_of_week() {
-        $diff = $this->weekday() - 1;
-        if ($diff > 0) {
-            return $this->subtract($diff . 'D'); // TODO
-        } else {
-            return $this;
-        }        
-    }
-    
-    //
-    // Comparisons
+    public function to_utc() { return $this->to_timezone(self::utc_timezone()); }
     
     /**
     * Compares this date with another.
     * There's probably a better algorithm for this.
     *
-    * @param $d date to compare with
+    * @todo this should perform timezone conversions!!!
+    *       (at the moment it's broken if you compare two values with different timezones)
+    *
+    * @param $r date to compare with
     * @return 0 if the argument date is equal to this date, -1 if this date
     *         is before the date argument, and 1 if this date is after the
     *         date argument
     */
-    public function compare_to(Date $d) {
+    public function compare_to(Date $r) {
         
-        $l = $this->to_utc();
-        $r = $d->to_utc();
-
+        $l = $this;
+        $r = $r->to_timezone($this->timezone);
+        
         if ($l->y > $r->y) return 1; elseif ($l->y < $r->y) return -1;
         if ($l->m > $r->m) return 1; elseif ($l->m < $r->m) return -1;
         if ($l->d > $r->d) return 1; elseif ($l->d < $r->d) return -1;
@@ -224,223 +218,52 @@ class Date
         return 0;
          
     }
-
-    public function equals(Date $d) {
-        return $this->compare_to($d) == 0;
+    
+    protected function set_date($y, $m, $d) {
+        if (!checkdate($m, $d, $y)) {
+            throw new InvalidArgumentException("invalid date: $y-$m-$d");
+        }
+        $this->y = (int) $y;
+        $this->m = (int) $m;
+        $this->d = (int) $d;
     }
     
-    //
-    //
-    
-    public function add() {
-        
+    protected function set_time($h, $i, $s) {
+        $this->h = 0;
+        $this->i = 0;
+        $this->s = 0;
     }
-    
-    public function subtract() {
-        
-    }
-    
-    public function diff() {
-        
-    }
-    
-    //
-    // Helpers
     
     protected function set_timezone($tz) {
+        
         if ($tz === null) {
             $tz = self::default_timezone();
         } elseif (is_string($tz)) {
             $tz = new DateTimeZone($tz);
         }
+        
         if (($tz instanceof DateTimeZone)) {
             $this->timezone = $tz;
         } else {
-            throw new IllegalArgumentException("invalid timezone");
+            throw new InvalidArgumentException("invalid timezone");
         }
-        $this->utc = $this->timezone->getName() == 'UTC';
-    }
-    
-    protected function set_date($y, $m, $d) {
- 
-        if (!checkdate($m, $d, $y)) {
-            throw new IllegalArgumentException("invalid date: $y-$m-$d");
-        }
- 
-        $this->y = (int) $y;
-        $this->m = (int) $m;
-        $this->d = (int) $d;
- 
-    }
-     
-    protected function set_time($h, $i, $s) {
-        if ($h == 24 && $i == 0 && $s == 0) $h = 0;
-        if ($h < 0 || $h > 23 || $i < 0 || $i > 59 || $s < 0 || $s > 59) {
-            throw new IllegalArgumentException("invalid time: $h:$i:$s");
-        }
-        $this->h = $h;
-        $this->i = $i;
-        $this->s = $s;
-    }
-    
-    protected function create_new($y, $m, $d, $h, $i, $s, $tz = null) {
-        return new Date($y, $m, $d, $tz);
-    }
-    
-    // Takes a weekday number and converts it based on configuration
-    protected function adjust_day($d) {
-        
-        $k = $d - DATE_WEEK_START;
-        $v = $k % 7;
-        if ($v < 0) $v += 7;
-        
-        return $v + 1 + DATE_WEEK_OFFSET;
         
     }
 }
 
 class Date_Time extends Date
 {
-    public function __construct($y, $m, $d, $h, $i, $s, $tz = null) {
-        $this->set_timezone($tz);
-        $this->set_date($y, $m, $d);
-        $this->set_time($h, $i, $s);
-    }
+	public function to_date() { return new Date($this->native); }
+    public function to_date_time() { return $this; }
     
-    public function to_date() {
-        return new Date($this->y, $this->m, $this->d);
-    }
-    
-    public function to_date_time() {
-        return $this;
-    }
-    
-    protected function create_new($y, $m, $d, $h, $i, $s, $tz = null) {
-        return new Date_Time($y, $m, $d, $h, $i, $s, $tz);
+    protected function set_time($h, $i, $s) {
+        if ($h == 24 && $i == 0 && $s == 0) $h = 0;
+        if ($h < 0 || $h > 23 || $i < 0 || $i > 59 || $s < 0 || $s > 59) {
+            throw new InvalidArgumentException("invalid time: $h:$i:$s");
+        }
+        $this->h = (int) $h;
+        $this->i = (int) $i;
+        $this->s = (int) $s;
     }
 }
-
-
-
-// 
-// /**
-//  * Date class
-//  *
-//  * @todo add method for returning interval between two dates (in terms of months)
-//  * @todo add method for returning interval between two dates (in terms of seconds)
-//  *
-//  * @package BasePHP
-//  * @author Jason Frame
-//  */
-// class Date
-// {
-//     public static function date_for($d) {
-//         if ($d === null) {
-//             return null;
-//         } elseif ($d instanceof Date) {
-//             return $d->to_date();
-//         } else {
-//             return new Date($d);
-//         }
-//     }
-//     
-//     public static function datetime_for($d) {
-//         if ($d === null) {
-//             return null;
-//         } elseif ($d instanceof Date) {
-//             return $d->to_datetime();
-//         } else {
-//             return new Date_Time($d);
-//         }
-//     }
-// 
-
-//  
-//  public function __construct() {
-//  
-//      $x = func_num_args();
-//      
-//      // 0 args; current time and date
-//      if ($x == 0) {
-//          
-//          $this->from_unix(time());
-//          
-//      // 1 arg - could either be:
-//      // ISO8601
-//      // Component array
-//      // UNIX timestamp
-//      } elseif ($x == 1) {
-//          
-//          $a = func_get_arg(0);
-//          
-//          // If it's a number we'll assume it's a unix timestamp
-//          if (is_numeric($a)) {
-//              
-//              $this->from_unix($a);
-//              
-//          // Attempt to parse any other scalar as an ISO-8601 date string (sans timezone) or date string
-//          } elseif (is_scalar($a)) {
-//              
-//              if (preg_match(self::ISO_8601, $a, $m)) {
-//                  $this->set_date($m[1], $m[2], $m[3]);
-//                  if (isset($m[4])) {
-//                      $this->set_time($m[6], $m[7], $m[8]);
-//                  }
-//              } elseif ($unix = strtotime($a)) {
-//                  $this->from_unix($unix);
-//              } else {
-//                  throw new Error_IllegalArgument;
-//              }
-// 
-//          // Component array
-//          // We accept either a 3 element array (which will set the date), or
-//          // a >= 5 element array (which will set the time as well, defaulting
-//          // the seconds fields to 0)
-//          } elseif (is_array($a) && isset($a[0]) && count($a) >= 1) {
-//              
-//              if (count($a) == 1) {
-//                  array_push($a, 1, 1, 0, 0, 0);
-//              } elseif (count($a) == 2) {
-//                  array_push($a, 1, 0, 0, 0);
-//              } elseif (count($a) < 6) {
-//                  array_push($a, 0, 0, 0);
-//              }
-//              
-//              $this->set_date($a[0], $a[1], $a[2]);
-//              $this->set_time($a[3], $a[4], $a[5]);
-//          
-//          // Associative array    
-//          } elseif (is_array($a)) {
-//              
-//              $this->set_date(isset($a['year']) ? $a['year'] : date('Y'),
-//                              isset($a['month']) ? $a['month'] : 1,
-//                              isset($a['day']) ? $a['day'] : 1);
-//                              
-//              $this->set_time(isset($a['hour']) ? $a['hour'] : 0,
-//                              isset($a['minute']) ? $a['minute'] : 0,
-//                              isset($a['second']) ? $a['second'] : 0);
-//              
-//          // Any other single argument is invalid
-//          } else {
-//              throw new Error_IllegalArgument("Error creating date instance - I couldn't work out what format you wanted");
-//          } 
-//          
-//      // 3 args - explicit year, month, day
-//      } elseif ($x == 3) {
-//          $y = func_get_args();
-//          $this->set_date($y[0], $y[1], $y[2]);
-//          
-//      // 5/6 args - explicit year, month, day, hours, minutes [, seconds]
-//      } elseif ($x == 5 || $x == 6) {
-//          $y = func_get_args();
-//          $this->set_date($y[0], $y[1], $y[2]);
-//          $this->set_time($y[3], $y[4], isset($y[5]) ? $y[5] : 0);
-//          
-//      } else {
-//          throw new Error_IllegalArgument("Error creating date instance");
-//      }
-//      
-//  }
-//  
-
 ?>
