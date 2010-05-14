@@ -50,6 +50,75 @@ class Money
     }
     
     //
+    // Parsing
+    
+    /**
+     * Parses a money value from request parameters
+     *
+     * valid input forms are:
+     * array('units' => 100)
+     * array('units' => 100, 'currency' => 'USD')
+     * "100"
+     * "100.00"
+     * "100USD"
+     * "100.00USD"
+     *
+     * For strings, it is assumed the value will expressed in a currency's "major"
+     * unit (dollars, pounds, euros etc) and so will be multiplied by the currency's
+     * "units_per_major" setting.
+     *
+     * @param $value value to parse
+     * @param $with_currency whether to allow currency specification
+     *        if $with_currency is false and a currency is specified,
+     *        this method will return null.
+     * @return Money instance or null if an error was encountered
+     */
+    public static function from_request($value, $with_currency = false) {
+        
+        $units = null;
+        $currency = MONEY_DEFAULT_CURRENCY;
+        
+        if (is_array($value)) {
+            if (isset($value['units'])) {
+                $units = (int) $value['units'];
+                if (isset($value['currency'])) {
+                    $currency = $value['currency'];
+                }
+            }
+        } elseif (preg_match('/^(\d+)(\.\d+)?\s*([a-z]+)?$/i', trim($value), $matches)) {
+            $major = $matches[1];
+            if (!empty($matches[3])) {
+                $currency = strtoupper($matches[3]);
+            }
+            if (!empty($matches[2])) {
+                // TODO: possibly check that number of decimal places is correct
+                // for currency we're dealing with. That assumes, however, that
+                // we'll always be dealing with powers of 10. Not sure how that
+                // holds.
+                $major .= $matches[2];
+            }
+            if (isset(self::$CURRENCIES[$currency])) {
+                $units = floor($major * self::$CURRENCIES[$currency][0]);
+            }
+        }
+        
+        if ($units === null) {
+            return null;
+        }
+        
+        if ($currency != MONEY_DEFAULT_CURRENCY && !$with_currency) {
+            return null;
+        }
+        
+        if (!isset(self::$CURRENCIES[$currency])) {
+            return null;
+        }
+        
+        return new Money($units, $currency);
+        
+    }
+    
+    //
     // Rounding
     
     public static function round($float, $direction) {
