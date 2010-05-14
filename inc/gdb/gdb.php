@@ -39,23 +39,27 @@ class GDB
     );
     
     public static $quote_methods = array(
-        's'         => 'quote_string',
-        'str'       => 'quote_string',
-        'string'    => 'quote_string',
-        'b'         => 'quote_boolean',
-        'bool'      => 'quote_boolean',
-        'boolean'   => 'quote_boolean',
-        'f'         => 'quote_float',
-        'float'     => 'quote_float',
-        'i'         => 'quote_integer',
-        'int'       => 'quote_integer',
-        'integer'   => 'quote_integer',
-        'x'         => 'quote_binary',
-        'binary'    => 'quote_binary',
-        'd'         => 'quote_date',
-        'date'      => 'quote_date',
-        'dt'        => 'quote_datetime',
-        'datetime'  => 'quote_datetime'
+        's'             => 'quote_string',
+        'str'           => 'quote_string',
+        'string'        => 'quote_string',
+        'b'             => 'quote_boolean',
+        'bool'          => 'quote_boolean',
+        'boolean'       => 'quote_boolean',
+        'f'             => 'quote_float',
+        'float'         => 'quote_float',
+        'i'             => 'quote_integer',
+        'int'           => 'quote_integer',
+        'integer'       => 'quote_integer',
+        'x'             => 'quote_binary',
+        'binary'        => 'quote_binary',
+        'd'             => 'quote_date',
+        'date'          => 'quote_date',
+        'dt'            => 'quote_date_time',
+        'date_time'     => 'quote_date_time',
+        'ud'            => 'quote_utc_date',
+        'utc_date'      => 'quote_utc_date',
+        'udt'           => 'quote_utc_date_time',
+        'utc_date_time' => 'quote_utc_date_time'
     );
     
     public static function resolve_field_type_and_name($string) {
@@ -240,12 +244,26 @@ class GDB
     
     public function quote_date($value) {
         if ($value === NULL) return 'NULL';
-        return $this->quote_string(Date::parse($value)->to_sql());
+        if (!is_object($value)) $value = new Date($value);
+        return $this->quote_string($value->iso_date());
     }
     
-    public function quote_datetime($value) {
+    public function quote_date_time($value) {
         if ($value === NULL) return 'NULL';
-        return $this->quote_string(Date_Time::parse($value)->to_sql());
+        if (!is_object($value)) $value = new Date_Time($value);
+        return $this->quote_string($value->iso_date_time());
+    }
+    
+    public function quote_utc_date($value) {
+        if ($value === NULL) return 'NULL';
+        if (!is_object($value)) $value = new Date($value);
+        return $this->quote_string($value->to_utc()->iso_date());
+    }
+    
+    public function quote_utc_date_time($value) {
+        if ($value === NULL) return 'NULL';
+        if (!is_object($value)) $value = new Date_Time($value);
+        return $this->quote_string($value->to_utc()->iso_date_time());
     }
     
     //
@@ -712,9 +730,9 @@ class GDBResultMySQL extends GDBResult
             $v = $row[$field];
             if ($v === null) continue;
             if ($type == 'date') {
-                $row[$field] = Date::parse($v);
+                $row[$field] = new Date($v);
             } elseif ($type == 'datetime') {
-                $row[$field] = Date_Time::parse($v);
+                $row[$field] = new Date_Time($v);
             } elseif ($type == 'boolean') {
                 $row[$field] = (bool) $v;
             }
