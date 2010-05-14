@@ -1,6 +1,10 @@
 <?php
 namespace gdb;
 
+/**
+ * @todo this is completely MySQL specific at the moment so it needs to be
+ * extracted to a MySQLSchemaBuilder
+ */
 class SchemaBuilder
 {
     private $db;
@@ -74,8 +78,11 @@ class SchemaBuilder
                       DROP COLUMN " . $this->db->quote_ident($column_name));
     }
     
+    /**
+     * @todo this is rank. We need the ability to parse a field definition.
+     */
     public function rename_column($table, $existing_column_name, $new_column_name) {
-        // TODO
+        throw new UnsupportedOperationException;
     }
     
     public function add_index($table, $column_names, $options = array()) {
@@ -119,7 +126,7 @@ class SchemaBuilder
             case 'serial':      return $this->map_serial($options);
             case 'string':      return $this->map_string($options);
             case 'text':        return $this->map_text($options);
-            default:            throw new IllegalArgumentException("unknown column type - $type");
+            default:            throw new InvalidArgumentException("unknown column type - $type");
         }
     }
     
@@ -130,7 +137,7 @@ class SchemaBuilder
             case 'default': $type = 'BOLB'; break;
             case 'medium':  $type = 'MEDIUMBLOB'; break;
             case 'long':    $type = 'LONGBLOB'; break;
-            default:        throw new IllegalArgumentException("unknown MySQL size for blob column");
+            default:        throw new InvalidArgumentException("unknown MySQL size for blob column");
         }
         return $type . $this->default_options('text', $options);
     }
@@ -159,7 +166,7 @@ class SchemaBuilder
             case 'medium':  $type = 'MEDIUMINT'; break;
             case 'default': $type = 'INT'; break;
             case 'big':     $type = 'BIGINT'; break;
-            default:        throw new IllegalArgumentException("unknown MySQL size for int column");
+            default:        throw new InvalidArgumentException("unknown MySQL size for int column");
         }
         if (isset($options['limit'])) {
             $type .= '(' . $options['limit'] . ')';
@@ -183,7 +190,7 @@ class SchemaBuilder
             case 'default': $type = 'TEXT'; break;
             case 'medium':  $type = 'MEDIUMTEXT'; break;
             case 'long':    $type = 'LONGTEXT'; break;
-            default:        throw new IllegalArgumentException("unknown MySQL size for text column");
+            default:        throw new InvalidArgumentException("unknown MySQL size for text column");
         }
         return $type . $this->default_options('text', $options);
     }
@@ -198,7 +205,7 @@ class SchemaBuilder
                     $native_options .= ' UNSIGNED';
                 }
             } else {
-                throw new IllegalArgumentException("unsigned is only supported by numeric types");
+                throw new InvalidArgumentException("unsigned is only supported by numeric types");
             }
         }
         

@@ -91,6 +91,12 @@ class UploadedFile
     }
 }
 
+/**
+ * Represents a file which could not be uploaded due to an error
+ *
+ * UploadedFile and UploadedFileError both support the ok() method, so
+ * use this to determine if the upload was successful (don't use instanceof)
+ */
 class UploadedFileError
 {
     private $error;

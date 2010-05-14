@@ -1,14 +1,40 @@
 <?php
+/**
+ * base.php
+ */
+
 //
 // Common Exceptions
 
+/**
+ * @deprecated use InvalidArgumentException from SPL
+ */
 class IllegalArgumentException extends Exception {}
+
+/**
+ * Thrown when an object is requested to take some action that its
+ * current state does not support.
+ */
 class IllegalStateException extends Exception {}
+
+class UnsupportedOperationException extends Exception {}
+
+/**
+ * Represents any sort of IO error
+ */
 class IOException extends Exception {}
+
+/**
+ * Thrown when some operation involving finding something fails.
+ *
+ * It's explicitly *not* for range/bounds exceptions (e.g. access beyond an array's bounds).
+ * In these circumstances use an OutOfRangeException or an OutOfBoundsException from the SPL.
+ */
 class NotFoundException extends Exception {}
+
 class SecurityException extends Exception {}
 class SyntaxException extends Exception {}
-class UnsupportedOperationException extends Exception {}
+
 
 //
 // Base class - rewire functionality
@@ -195,6 +221,9 @@ class StaticCallback extends Callback
 
 /**
  * A rather naive inflector
+ *
+ * I have no interest in making this into some thing complex with tons of rule-based
+ * processing.
  */
 class Inflector
 {
