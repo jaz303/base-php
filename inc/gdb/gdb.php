@@ -273,14 +273,6 @@ class GDB
     // Query Helpers
     
     /**
-     * 
-     *
-     */
-    public function select_value() {
-        
-    }
-    
-    /**
      * Inserts a row into a table
      *
      * @param $table table name to insert into
@@ -288,7 +280,6 @@ class GDB
      *        $this->auto_quote_array() so keys may contain type info, for example
      *        's:username'.
      * @return ID of inserted row, if available
-     * @throws GDBException on failure
      */
     public function insert($table, $values) {
         $values = $this->auto_quote_array($values);
@@ -299,8 +290,69 @@ class GDB
         return $this->last_insert_id();
     }
     
+    /**
+     * Updates values in a table
+     *
+     * @param $table table to update
+     * @param $values associative array of field => value. array will be passed to
+     *        $this->auto_quote_array() so keys may contain type info, for example
+     *        's:username'.
+     * @param all other parameters are passed to conditions_for()
+     * @return number of affected rows
+     */
     public function update($table, $values) {
-        
+        $sql = "UPDATE {$this->quote_ident($table)} SET";
+        $sep = ' ';
+        foreach ($this->auto_quote_array($values) as $k => $v) {
+            $sql .= $sep . $k . ' = ' . $v;
+            $sep = ', ';
+        }
+        $conditions = call_user_func_array(
+            array($this, 'conditions_for'),
+            array_slice(func_get_args(), 2)
+        );
+        if ($conditions) {
+            $sql .= " WHERE $conditions";
+        }
+        return $this->x($sql);
+    }
+    
+    /**
+     * Converts various representations of conditions into SQL suitable for
+     * WHERE clause
+     *
+     * no args          -> empty string
+     * array            ->
+     * string           -> string returned unaltered
+     * string1, string2 -> "string1 = 'string2'" (supports autoquoting)
+     * string, array    -> string is interpolated with array values via auto_quote_query()
+     */
+    protected function conditions_for($arg1 = null, $arg2 = null) {
+        switch (func_num_args()) {
+            case 0:
+                return '';
+            case 1:
+                if (is_array($arg1)) {
+                    $values = array();
+                    foreach ($this->auto_quote_array($arg1) as $k => $v) $values[] = "$k = $v";
+                    return implode(' AND ', $values);
+                } else {
+                    return $arg1;
+                }
+            case 2:
+                if (is_array($arg2)) {
+                    return $this->auto_quote_query($arg1, $arg2);
+                } else {
+                    list($type, $name) = $this->resolve_field_type_and_name($arg1);
+                    if ($type !== null) {
+                        $quoter = self::$quote_methods[$type];
+                        $arg2 = $this->$quoter($arg2);
+                    }
+                    return "$name = $arg2";
+                }
+            default:
+                throw new GDBException;
+        }
     }
     
     //
@@ -506,6 +558,16 @@ abstract class GDBResult implements Iterator, Countable
     public abstract function value($offset = 0);
     
     /**
+     * Returns the first (filtered) row from this result. Behaviour
+     * is undefined if both <tt>first_row()</tt> and result-set iteration
+     * are used.
+     */
+    public function first_row() {
+        $this->next();
+        return $this->current();
+    }
+    
+    /**
      * Seeks this result to a specified offset. Must throw an exception on
      * failure.
      */
@@ -573,13 +635,6 @@ abstract class GDBResult implements Iterator, Countable
         $this->mode_ident   = $ident;
         $this->mode_options = $options;
         return $this;
-    }
-    
-    /**
-     * Returns the first (filtered) row from this result
-     */
-    public function row() {
-        foreach ($this as $v) return $v;
     }
     
     /**
@@ -670,7 +725,6 @@ abstract class GDBResult implements Iterator, Countable
                     }
                 }
             }
-            
         }
         return $this->current_row_memo;
     }
