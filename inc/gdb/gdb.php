@@ -162,7 +162,7 @@ class GDB
                 }
             
                 $value = $replace_args[$index];
-                $quote_method = self::$quote_methods[$m[2]];
+                $quote_method = GDB::$quote_methods[$m[2]];
                 if (!$quote_method) {
                     throw new InvalidArgumentException("'$m[2]' is not a valid auto-quote type specifier");
                 }
@@ -311,9 +311,7 @@ class GDB
             array($this, 'conditions_for'),
             array_slice(func_get_args(), 2)
         );
-        if ($conditions) {
-            $sql .= " WHERE $conditions";
-        }
+        if ($conditions) $sql .= " WHERE $conditions";
         return $this->x($sql);
     }
     
