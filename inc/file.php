@@ -117,7 +117,7 @@ class UploadedFileError
     }
     
     public function is_missing() {
-        return $this->error == UPLOAD_ERR_NO_FILE
+        return $this->error == UPLOAD_ERR_NO_FILE;
     }
     
     public function is_internal() {

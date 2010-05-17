@@ -32,6 +32,8 @@ class IOException extends Exception {}
  */
 class NotFoundException extends Exception {}
 
+class NoSuchMethodException extends Exception {}
+
 class SecurityException extends Exception {}
 class SyntaxException extends Exception {}
 

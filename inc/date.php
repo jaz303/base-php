@@ -102,17 +102,17 @@ class Date
 	    if (!is_array($args)) $args = func_get_args();
 	    switch (func_num_args()) {
 			case 0: // now
-			    $this->native = new DateTime;
+			    $this->set_native(new DateTime);
 			    break;
 			case 1: // native DateTime object or string
 			    if ($args[0] instanceof DateTime) {
-			        $this->native = $args[0];
+			        $this->set_native($args[0]);
 			    } else {
-			        $this->native = new DateTime($args[0]);
+			        $this->set_native(new DateTime($args[0]));
 			    }
 			    break;
 			case 2: // string/null + timezone
-			    $this->native = new DateTime($args[0], $args[1]);
+			    $this->set_native(new DateTime($args[0], $args[1]));
 			    break;
 			case 3: // y/m/d
 			    $this->set_date($args[0], $args[1], $args[2]);
@@ -219,6 +219,11 @@ class Date
          
     }
     
+    protected function set_native(DateTime $dt) {
+        $dt->setTime(0, 0, 0);
+        $this->native = $dt;
+    }
+    
     protected function set_date($y, $m, $d) {
         if (!checkdate($m, $d, $y)) {
             throw new InvalidArgumentException("invalid date: $y-$m-$d");
@@ -255,6 +260,10 @@ class Date_Time extends Date
 {
 	public function to_date() { return new Date($this->native); }
     public function to_date_time() { return $this; }
+    
+    protected function set_native(DateTime $dt) {
+        $this->native = $dt;
+    }
     
     protected function set_time($h, $i, $s) {
         if ($h == 24 && $i == 0 && $s == 0) $h = 0;
