@@ -92,6 +92,41 @@ class Date
         }
     }
     
+    //
+    // Safe parsing anywhere else
+    
+    public static function parse_date($value) {
+        if ($value === null) {
+            return null;
+        } elseif ($value instanceof Date_Time) {
+            return $value->to_date();
+        } elseif ($value instanceof Date) {
+            return $value;
+        } else {
+            try {
+                return new Date($value);
+            } catch (Exception $e) {
+                return null;
+            }
+        }
+    }
+    
+    public static function parse_date_time($value) {
+        if ($value === null) {
+            return null;
+        } elseif ($value instanceof Date_Time) {
+            return $value;
+        } elseif ($value instanceof Date) {
+            return $value->to_date_time();
+        } else {
+            try {
+                return new Date_Time($value);
+            } catch (Exception $e) {
+                return null;
+            }
+        }
+    }
+    
     // Native DateTime instance
 	protected $native = null;
 	
