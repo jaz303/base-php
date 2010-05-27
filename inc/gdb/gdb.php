@@ -315,6 +315,16 @@ class GDB
         return $this->x($sql);
     }
     
+    public function delete($table) {
+        $sql = "DELETE FROM {$this->quote_ident($table)}";
+        $conditions = call_user_func_array(
+            array($this, 'conditions_for'),
+            array_slice(func_get_args(), 2)
+        );
+        if ($conditions) $sql .= " WHERE $conditions";
+        return $this->x($sql);
+    }
+    
     /**
      * Converts various representations of conditions into SQL suitable for
      * WHERE clause
