@@ -38,6 +38,14 @@ class Image
         IMAGETYPE_JPEG  => 'imagejpeg'
     );
     
+    public static function is_supported_type($type) {
+        if (is_numeric($type)) {
+            return isset(self::$CONSTRUCTORS[$type]);
+        } else {
+            return isset(self::$STRING_MAP[$type]);
+        }
+    }
+    
     protected static function native_type_for($thing) {
         if (is_numeric($thing)) {
             return $thing;
