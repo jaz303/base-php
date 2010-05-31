@@ -208,7 +208,7 @@ class GDB
                 $method = self::$quote_methods[substr($k, 0, $p)];
                 $out[substr($k, $p + 1)] = $this->$method($raw_value);
             } else {
-                $out[$k] = $raw_value;
+                $out[$k] = $raw_value === null ? 'NULL' : $raw_value;
             }
         }
         return $out;
