@@ -49,8 +49,8 @@ class TableDefinition
         $this->column($name, 'date', $options);
     }
     
-    public function datetime($name, $options = array()) {
-        $this->column($name, 'datetime', $options);
+    public function date_time($name, $options = array()) {
+        $this->column($name, 'date_time', $options);
     }
     
     public function float($name, $options = array()) {

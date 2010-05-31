@@ -120,7 +120,7 @@ class SchemaBuilder
             case 'blob':        return $this->map_blob($options);
             case 'boolean':     return $this->map_boolean($options);
             case 'date':        return $this->map_date($options);
-            case 'datetime':    return $this->map_datetime($options);
+            case 'date_time':   return $this->map_date_time($options);
             case 'float':       return $this->map_float($options);
             case 'integer':     return $this->map_integer($options);
             case 'serial':      return $this->map_serial($options);
@@ -150,8 +150,8 @@ class SchemaBuilder
         return 'DATE' . $this->default_options('date', $options);
     }
     
-    protected function map_datetime($options) {
-        return 'DATETIME' . $this->default_options('datetime', $options);
+    protected function map_date_time($options) {
+        return 'DATETIME' . $this->default_options('date_time', $options);
     }
     
     protected function map_float($options) {
