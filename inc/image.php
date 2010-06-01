@@ -190,10 +190,21 @@ class Image
         $this->dump(null);
     }
     
-    public function save($filename = null) {
+    public function save($filename = null, $create_mode = false) {
         if ($filename) $this->filename = $filename;
         if ($this->filename === null) {
             throw new InvalidArgumentException("can't save file without filename");
+        }
+        $directory = dirname($this->filename);
+        if (!is_dir($directory)) {
+            if ($create_mode) {
+                if ($create_mode === true) $create_mode = 0777;
+                if (!mkdir($directory, $create_mode, true)) {
+                    throw new IOException("error saving - can't create directory $directory");
+                }
+            } else {
+                throw new IOException("error saving - directory $directory does not exist");
+            }
         }
         $this->dump($this->filename);
         return $this;
