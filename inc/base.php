@@ -37,7 +37,62 @@ class NoSuchMethodException extends Exception {}
 class SecurityException extends Exception {}
 class SyntaxException extends Exception {}
 
+/**
+ * General interface denoting a persistable object.
+ *
+ * Additionally, a persistable object should generally implement <tt>get_</tt>,
+ * <tt>set_</tt> and, optionally, <tt>is_</tt> methods for each of its attributes.
+ *
+ * @package BasePHP
+ */
+interface Persistable
+{
+    /**
+     * Save this object.
+     *
+     * @return true on success, false on failure
+     */
+	public function save();
 
+	/**
+	 * Returns true if this object has been persisted, false otherwise.
+	 *
+	 * @return true if this object has been persisted, false otherwise.
+	 */
+	public function is_saved();
+
+	/**
+	 * Returns a copy of this object's attributes as an associative array.
+	 *
+	 * @return a copy of this object's attributes as an associative array.
+	 */
+	public function attributes();
+
+	/**
+	 * Sets all of this object's attributes from an associative array.
+	 * May throws an <tt>\InvalidArgumentException</tt> exception if any keys in
+	 * <tt>$array</tt> are not valid properties of this object.
+	 *
+	 * @param $attributes array of attributes to set on this object.
+	 * @throws \InvalidArgumentException if specified properties do not exist.
+	 */
+	public function set_attributes(array $attributes);
+
+    /**
+     * Returns true if this object is valid, false otherwise.
+     *
+     * @return true if this object is valid, false otherwise.
+     */
+	public function is_valid();
+
+    /**
+     * Returns an <tt>\Errors</tt> objects containing errors generated on the
+     * last call to <tt>is_valid()</tt>
+     *
+     * @return <tt>\Errors</tt> instance detailing validation errors
+     */
+	public function errors();
+}
 
 /**
  * Callbacks are invokable objects providing a common interface to the numerous
