@@ -133,8 +133,8 @@ abstract class Callback
                 return call_user_func_array(array($arg1, $arg2), func_get_args());
             }
         }
+        throw new InvalidArgumentException("Couldn't understand the supplied callback description");
     }	
-
 }
 
 /**
