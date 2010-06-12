@@ -127,7 +127,7 @@ class Money
         } elseif ($direction == 'down') {
             return floor($float);
         } else {
-            throw new IllegalArgumentException;
+            throw new InvalidArgumentException;
         }
     }
     

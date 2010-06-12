@@ -7,11 +7,6 @@
 // Common Exceptions
 
 /**
- * @deprecated use InvalidArgumentException from SPL
- */
-class IllegalArgumentException extends Exception {}
-
-/**
  * Thrown when an object is requested to take some action that its
  * current state does not support.
  */
@@ -119,7 +114,7 @@ abstract class Callback
      * @param $arg1 see above
      * @param $arg2 see above
      * @return invokable object
-     * @throws IllegalArgumentException if supplied arguments do not resemble
+     * @throws InvalidArgumentException if supplied arguments do not resemble
      *         valid callback.
      */
     public static function create($arg1, $arg2 = null) {
@@ -147,7 +142,7 @@ abstract class Callback
                 return new StaticCallback($arg1, $arg2);
             }
         }
-        throw new IllegalArgumentException("Couldn't understand the supplied callback description");
+        throw new InvalidArgumentException("Couldn't understand the supplied callback description");
     }
 }
 
