@@ -373,7 +373,9 @@ class GDB
     //
     // Transaction support
     
-    private $tx_active  = false;
+    private $tx_active      = false;
+    private $savepoints     = 0;
+    
     
     public function in_transaction() { return $this->tx_active; }
     
@@ -412,6 +414,22 @@ class GDB
             $lambda();
         } else {
             $this->transaction($lambda);
+        }
+    }
+    
+    public function with_savepoint($lambda) {
+        if (!$this->in_transaction()) {
+            $this->transaction($lambda);
+        } else {
+            $savepoint = "gdb_" . (++$this->savepoints);
+            $this->set_savepoint($savepoint);
+            try {
+                $lambda();
+                $this->release_savepoint($savepoint);
+            } catch (\Exception $e) {
+                $this->rollback_to_savepoint($savepoint);
+                throw $e;
+            }
         }
     }
     
@@ -455,6 +473,18 @@ class GDB
         } else {
             throw new GDBException("can't commit, no active transaction");
         }
+    }
+    
+    public function set_savepoint($id) {
+        $this->x("SAVEPOINT $id");
+    }
+    
+    public function rollback_to_savepoint($id) {
+        $this->x("ROLLBACK TO SAVEPOINT $id");
+    }
+    
+    public function release_savepoint($id) {
+        $this->x("RELEASE SAVEPOINT $id");
     }
 }
 
