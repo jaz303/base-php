@@ -77,13 +77,11 @@ class GDB
         
         if (!isset(self::$instances[$name])) {
             
-            global $_GDB;
-            
-            if (!isset($_GDB[$name])) {
+            if (!isset($GLOBALS['_GDB'][$name])) {
                 throw new GDBException("Can't find configuration for GDB connection '$name'");
             }
             
-            $config = $_GDB[$name];
+            $config = $GLOBALS['_GDB'][$name];
             $class  = self::$driver_class_map[$config['driver']];
             
             self::$instances[$name] = new $class($config);
@@ -271,6 +269,11 @@ class GDB
     
     //
     // Query Helpers
+    
+    public function select($table, $project = null) {
+        $query = new GDBQuery($this, $table, $project);
+        return $query;
+    }
     
     /**
      * Inserts a row into a table
@@ -855,5 +858,98 @@ class GDBResultMySQL extends GDBResult
     protected function perform_next() {
         return mysql_fetch_assoc($this->native);
     }
+}
+
+/**
+ * Fluent query interface
+ *
+ * $db->select('user', '*')
+ */
+class GDBQuery implements IteratorAggregate
+{
+    private $db;
+    private $table;
+    private $project;
+    
+    private $joins      = array();
+    private $order      = array();
+    
+    public function __construct(GDB $db, $table, $project = '*') {
+        
+        $this->db       = $db;
+        $this->table    = $table;
+        
+        if ($project === null) $project = '*';
+        $this->project($project);
+        
+    }
+    
+    public function project($fields) {
+        if (func_num_args() > 1) {
+            $this->project = implode(', ', func_get_args());
+        } elseif (is_array($fields)) {
+            $this->project = implode(', ', $fields);
+        } else {
+            $this->project = $fields;
+        }
+    }
+    
+    //
+    // Joins
+    
+    public function join() {
+        
+    }
+    
+    public function left_join() {
+        
+    }
+    
+    public function right_join() {
+        
+    }
+    
+    public function inner_join() {
+        
+    }
+    
+    //
+    // Ordering
+    
+    public function order($field, $direction = 'asc') {
+        $this->order[] = array($field, $direction);
+        return $this;
+    }
+    
+    public function asc($field) { return $this->order($field, 'asc'); }
+    public function desc($field) { return $this->order($field, 'desc'); }
+    
+    //
+    // Generate
+    
+    public function to_sql() {
+        
+        $sql = "SELECT {$this->project} FROM {$this->table}";
+    
+        
+        return $sql;
+        
+    }
+    
+    //
+    // Kick!
+    
+    public function result() {
+        return $this->db->q($this->to_sql());
+    }
+    
+    public function getIterator() {
+        return $this->result();
+    }
+}
+
+class GDBQueryJoin
+{
+    
 }
 ?>

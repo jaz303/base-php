@@ -56,7 +56,7 @@ class V
     }
     
     public static function is_email($email, $use_dns = true) {
-        if (!preg_match('/^[^@]+@([a-z0-9-]+(\.[a-z0-9-]+))*$/i', $value, $matches)) {
+        if (!preg_match('/^[^\s@]+@([a-z0-9-]+(\.[a-z0-9-]+))*$/i', $value, $matches)) {
 			return false;
 		} elseif ($use_dns) {
 		    $tmp = array();
