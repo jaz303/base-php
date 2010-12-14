@@ -566,6 +566,32 @@ class GDBMySQL extends GDB
         }
     
     }
+    
+    /**
+     * Returns an informal array describing the connected database.
+     */
+    public function get_usage() {
+        
+        $out = array();
+        
+        foreach ($this->q('SHOW TABLES') as $table) {
+            $table_name = array_shift($table);
+            
+            $r_status = mysql_query("SHOW TABLE STATUS LIKE '$table_name'");
+            $status = mysql_fetch_assoc($r_status);
+            mysql_free_result($r_status);
+            
+            $out['tables'][$table_name] = array(
+                'rows'          => $status['Rows'],
+                'engine'        => $status['Engine'],
+                'data_size'     => $status['Data_length'],
+                'index_size'    => $status['Index_length']
+            );
+        }
+        
+        return $out;
+    
+    }
 }
 
 abstract class GDBResult implements Iterator, Countable
