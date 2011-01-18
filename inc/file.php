@@ -11,7 +11,7 @@ abstract class AbstractFile
     public function extension() { return self::extension_for($this->basename()); }
     
     public function size() { return filesize($this->path()); }
-    public function content_type() { return MIME::for_file($this()); }
+    public function content_type() { return MIME::for_file($this); }
     
     public function is_readable() { return is_readable($this->path()); }
     
@@ -42,6 +42,10 @@ abstract class AbstractFile
     public function to_image() {
         return new Image($this->path());
     }
+    
+    public function is_upload() {
+        return false;
+    }
 }
 
 class File extends AbstractFile
@@ -71,7 +75,7 @@ class UploadedFile extends AbstractFile
         
     }
     
-    public function ok() { return true; }
+    public function is_readable() { return true; }
     public function was_upload_attempted() { return true; }
     
     public function path() { return $this->upload_path; }
@@ -79,6 +83,8 @@ class UploadedFile extends AbstractFile
     
     public function size() { return $this->size; }
     public function content_type() { return $this->content_type; }
+    
+    public function is_upload() { return true; }
 }
 
 /**
@@ -95,7 +101,7 @@ class UploadedFileError
         $this->error = $error;
     }
     
-    public function ok() { return false; }
+    public function is_readable() { return false; }
     
     public function was_upload_attempted() {
         return $this->error != UPLOAD_ERR_NO_FILE;
