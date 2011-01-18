@@ -6,18 +6,34 @@
 //
 // Common Exceptions
 
+// BEFORE CREATING YOUR OWN, PLEASE REMEMBER THE SPL DEFINES THESE EXCEPTIONS:
+//
+// LogicException
+//   BadFunctionCallException
+//     BadMethodCallException
+//   DomainException
+//   InvalidArgumentException
+//   LengthException
+//   OutOfRangeException
+// RuntimeException
+//   OutOfBoundsException
+//   OverflowException
+//   RangeException
+//   UnderflowException
+//   UnexpectedValueException
+
 /**
  * Thrown when an object is requested to take some action that its
  * current state does not support.
  */
-class IllegalStateException extends Exception {}
+class IllegalStateException extends DomainException {}
 
-class UnsupportedOperationException extends Exception {}
+class UnsupportedOperationException extends RuntimeException {}
 
 /**
  * Represents any sort of IO error
  */
-class IOException extends Exception {}
+class IOException extends RuntimeException {}
 
 /**
  * Thrown when some operation involving finding something fails.
@@ -25,9 +41,9 @@ class IOException extends Exception {}
  * It's explicitly *not* for range/bounds exceptions (e.g. access beyond an array's bounds).
  * In these circumstances use an OutOfRangeException or an OutOfBoundsException from the SPL.
  */
-class NotFoundException extends Exception {}
+class NotFoundException extends LogicException {}
 
-class NoSuchMethodException extends Exception {}
+class NoSuchMethodException extends RuntimeException {}
 
 class SecurityException extends Exception {}
 class SyntaxException extends Exception {}
