@@ -27,11 +27,11 @@ class Errors implements IteratorAggregate
     public function full_messages() {
         $messages = array();
         foreach ($this->errors as $field => $errors) {
-            $field = Inflector::humanize($field);
             foreach ($errors as $message) {
                 if ($message[0] == '^') {
                     $messages[] = substr($message, 1);
                 } else {
+                    $field = Inflector::humanize($field);
                     $messages[] = "$field $message";
                 }
             }
