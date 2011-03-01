@@ -10,7 +10,6 @@
  *
  * @todo add/subtract intervals
  * @todo get interval between two dates
- * @todo timezone conversion
  */
 class Date
 {
@@ -127,11 +126,23 @@ class Date
         }
     }
     
+    //
+    // Serialization
+    
+    public function __sleep() {
+        return array('y', 'm', 'd', 'h', 'i', 's', 'timezone_name');
+    }
+    
+    public function __wakeup() {
+        $this->set_timezone($this->timezone_name);
+        $this->generate_native();
+    }
+    
     // Native DateTime instance
 	protected $native = null;
 	
 	protected $y, $m, $d, $h, $i, $s;
-	protected $timezone;
+	protected $timezone, $timezone_name;
 	
 	public function __construct($args = null) {
 	    if (!is_array($args)) $args = func_get_args();
@@ -171,19 +182,12 @@ class Date
 		}
 		
 		if ($this->native === null) {
-		    $this->native = new DateTime(
-		        sprintf(
-		            "%04d-%02d-%02dT%02d:%02d:%02d",
-		            $this->y, $this->m, $this->d,
-		            $this->h, $this->i, $this->s
-		        ),
-		        $this->timezone
-		    );
+		    $this->generate_native();
 		} else {
-		    $this->y = $this->native->format('Y');
-		    $this->m = $this->native->format('m');
-		    $this->d = $this->native->format('d');
-		    $this->set_time($this->native->format('h'),
+		    $this->y = (int) $this->native->format('Y');
+		    $this->m = (int) $this->native->format('m');
+		    $this->d = (int) $this->native->format('d');
+		    $this->set_time($this->native->format('H'),
 		                    $this->native->format('i'),
 		                    $this->native->format('s'));
 		    $this->timezone = $this->native->getTimezone();
@@ -220,7 +224,8 @@ class Date
         } else {
             $dt = clone $this->native;
             $dt->setTimezone($tz);
-            return new self($dt);
+            $class = get_class($this);
+            return new $class($dt);
         }
     }
     
@@ -259,6 +264,17 @@ class Date
         $this->native = $dt;
     }
     
+    protected function generate_native() {
+        $this->native = new DateTime(
+	        sprintf(
+	            "%04d-%02d-%02dT%02d:%02d:%02d",
+	            $this->y, $this->m, $this->d,
+	            $this->h, $this->i, $this->s
+	        ),
+	        $this->timezone
+	    );
+    }
+    
     protected function set_date($y, $m, $d) {
         if (!checkdate($m, $d, $y)) {
             throw new InvalidArgumentException("invalid date: $y-$m-$d");
@@ -284,6 +300,7 @@ class Date
         
         if (($tz instanceof DateTimeZone)) {
             $this->timezone = $tz;
+            $this->timezone_name = $tz->getName();
         } else {
             throw new InvalidArgumentException("invalid timezone");
         }
