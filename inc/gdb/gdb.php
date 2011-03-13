@@ -614,6 +614,8 @@ abstract class GDBResult implements Iterator, Countable
     private $mode_ident     = null; 
     private $mode_options   = array();
     
+    private $first_row_memo = null;
+    
     /**
      * Returns a single field from the first row of this result set. Behaviour
      * is undefined if both <tt>value()</tt> and result-set iteration are
@@ -630,8 +632,11 @@ abstract class GDBResult implements Iterator, Countable
      * are used.
      */
     public function first_row() {
-        $this->next();
-        return $this->current();
+        if ($this->first_row_memo === null) {
+            $this->next();
+            $this->first_row_memo = $this->current();
+        }
+        return $this->first_row_memo;
     }
     
     /**
