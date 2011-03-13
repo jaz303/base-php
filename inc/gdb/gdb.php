@@ -628,6 +628,21 @@ abstract class GDBResult implements Iterator, Countable
     private $first_row_memo = null;
     
     /**
+     * Returns the number of fields in each row of this result set.
+     *
+     * @return the number of fields in each row of this result set.
+     */
+    public abstract function field_count();
+    
+    /**
+     * Returns the name of the `$offset`'th field in this result set (zero-indexed).
+     * This is the same as the key used used when accessing result values in associative arrays.
+     *
+     * @return the name of specified field offset.
+     */
+    public abstract function field_name($offset);
+    
+    /**
      * Returns a single field from the first row of this result set. Behaviour
      * is undefined if both <tt>value()</tt> and result-set iteration are
      * used.
@@ -714,6 +729,9 @@ abstract class GDBResult implements Iterator, Countable
      *
      */
     public function mode($mode, $ident, $options = array()) {
+        if ($mode == 'value' && is_integer($ident)) {
+            $ident = $this->field_name($ident);
+        }
         $this->mode         = $mode;
         $this->mode_ident   = $ident;
         $this->mode_options = $options;
@@ -820,7 +838,7 @@ abstract class GDBResult implements Iterator, Countable
     
     public function key($new_key = null) {
         if ($new_key) {
-            $this->key = $new_key;
+            $this->key = is_integer($new_key) ? $this->field_name($ney_key) : $new_key;
             return $this;
         } else {
             return $this->key ? $this->current_row[$this->key] : $this->index;
@@ -917,6 +935,14 @@ class GDBResultMySQL extends GDBResult
     
     protected function perform_next() {
         return mysql_fetch_assoc($this->native);
+    }
+    
+    public function field_count() {
+        return mysql_num_fields($this->native);
+    }
+    
+    public function field_name($offset) {
+        return mysql_field_name($this->native, $offset);
     }
 }
 
