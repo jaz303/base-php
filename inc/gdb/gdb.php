@@ -296,11 +296,11 @@ class GDB
     /**
      * Updates values in a table
      *
-     * @param $table table to update
-     * @param $values associative array of field => value. array will be passed to
+     * @param (string) $table table to update
+     * @param (array) $values associative array of field => value. array will be passed to
      *        $this->auto_quote_array() so keys may contain type info, for example
      *        's:username'.
-     * @param all other parameters are passed to conditions_for()
+     * @param ... remaining parameters are passed to conditions_for()
      * @return number of affected rows
      */
     public function update($table, $values) {
@@ -332,13 +332,24 @@ class GDB
      * Converts various representations of conditions into SQL suitable for
      * WHERE clause
      *
-     * no args          -> empty string
-     * array            ->
-     * string           -> string returned unaltered
-     * string1, string2 -> "string1 = 'string2'" (supports autoquoting)
-     * string, array    -> string is interpolated with array values via auto_quote_query()
+     * @params
+     *   Returns empty string
+     * @params
+     *   Array of field => value becomes field1 = 'foo' AND field2 = 'bar'
+     *   Supports array key type-hinting e.g. array('i:id' => '12')
+     *   @param (array) $arg1
+     * @params
+     *   
+     *   @param (string) $arg1 fieldname (may contain type hint)
+     *   @param (string) $arg2 value
+     * @params
+     *   Interpolates SQL fragment with values from array
+     *   @param (string) $arg1 SQL string
+     *   @param (array) $arg2 array of values with which to interpolate $arg1
+     *
+     * @return valid SQL fragment suitable for use in WHERE clause
      */
-    protected function conditions_for($arg1 = null, $arg2 = null) {
+    public function conditions_for($arg1 = null, $arg2 = null) {
         switch (func_num_args()) {
             case 0:
                 return '';
@@ -531,7 +542,7 @@ class GDBMySQL extends GDB
         if (!$res = mysql_query($sql)) {
             $this->handle_error(); // will throw
         } else {
-            return mysql_affected_rows();
+            return mysql_affected_rows($this->link);
         }
     }
     
@@ -740,6 +751,9 @@ abstract class GDBResult implements Iterator, Countable
     private $current_row;
     private $current_row_memo;
     
+    /**
+     * @ignore
+     */
     public function rewind() {
         
         if ($this->paginating) {
@@ -766,6 +780,9 @@ abstract class GDBResult implements Iterator, Countable
         
     }
     
+    /**
+     * @ignore
+     */
     public function current() {
         if ($this->current_row_memo === null) {
             $row = $this->current_row;
@@ -810,6 +827,9 @@ abstract class GDBResult implements Iterator, Countable
         }
     }
     
+    /**
+     * @ignore
+     */
     public function next() {
         if ($this->limit === 0) {
             $this->current_row = false;
@@ -821,10 +841,19 @@ abstract class GDBResult implements Iterator, Countable
         $this->index++;
     }
     
+    /**
+     * @ignore
+     */
     public function valid() {
         return $this->current_row !== false;
     }
     
+    /**
+     * Returns the total number of rows in this result set, regardless of pagination
+     * settings.
+     *
+     * @return total number of rows in this result set
+     */
     public function count() {
         return $this->row_count();
     }
