@@ -504,6 +504,10 @@ class GDBMySQL extends GDB
 {
     private $link;
     
+    public function get_mysql_link() {
+        return $this->link;
+    }
+    
     protected function connect() {
         if (!$this->link = mysql_connect($this->config['host'],
                                          $this->config['username'],
