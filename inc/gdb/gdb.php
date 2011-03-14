@@ -29,7 +29,7 @@ class GDBUniqueViolation extends GDBIntegrityConstraintViolation {}
  */
 class GDBCheckViolation extends GDBIntegrityConstraintViolation {}
 
-class GDB
+abstract class GDB
 {
     //
     // Statics
@@ -380,9 +380,7 @@ class GDB
     //
     //
     
-    public function new_schema_builder() {
-        return new gdb\SchemaBuilder($this);
-    }
+    public abstract function new_schema_builder();
     
     //
     // Transaction support
@@ -602,6 +600,10 @@ class GDBMySQL extends GDB
         
         return $out;
     
+    }
+    
+    public function new_schema_builder() {
+        return new gdb\MySQLSchemaBuilder($this);
     }
 }
 
