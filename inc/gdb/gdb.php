@@ -502,21 +502,71 @@ abstract class GDB
 
 class GDBMySQL extends GDB
 {
-    private $link;
+    private $write_link = null;
+    private $read_link  = null;
     
     public function get_mysql_link() {
-        return $this->link;
+        return $this->get_mysql_write_link();
+    }
+    
+    public function get_mysql_read_link() {
+        if ($this->read_link === null) {
+            if (isset($this->config['read'])) {
+                $rh = $this->config['read'];
+                $this->read_link = $this->mysql_connect($rh[array_rand($rh)]);
+            } else {
+                throw new GDBException("Error connecting to MySQL - no read config available");
+            }
+        }
+        return $this->read_link;
+    }
+    
+    public function get_mysql_write_link() {
+        if ($this->write_link === null) {
+            if (isset($this->config['write'])) {
+                $wh = $this->config['write'];
+                $this->write_link = $this->mysql_connect($wh[array_rand($wh)]);
+            } else {
+                throw new GDBException("Error connecting to MySQL - no write config available");
+            }            
+        }
+        return $this->write_link;
+    }
+    
+    protected function any_link() {
+        if ($this->read_link) return $this->read_link;
+        if ($this->write_link) return $this->write_link;
+        if (isset($this->config['read'])) return $this->get_mysql_read_link();
+        if (isset($this->config['write'])) return $this->get_mysql_write_link();
+        return null;
+    }
+    
+    protected function get_mysql_link_for_query($sql) {
+        if (preg_match('/^\s*select/i', $sql)) {
+            return $this->get_mysql_read_link();
+        } else {
+            return $this->get_mysql_write_link();
+        }
+    }
+    
+    protected function mysql_connect($config) {
+        if (!($link = mysql_connect($config['host'], $config['username'], $config['password']))) {
+            throw new GDBException("Error connecting to MySQL ({$config['username']}@{$config['host']})");
+        }
+        
+        if (!mysql_select_db($config['database'], $link)) {
+            throw new GDBException("Error selecting database '{$config['database']}'");
+        }
+        
+        return $link;
     }
     
     protected function connect() {
-        if (!$this->link = mysql_connect($this->config['host'],
-                                         $this->config['username'],
-                                         $this->config['password'])) {
-            throw new GDBException("Error connecting to MySQL");
-        }
-        
-        if (!mysql_select_db($this->config['database'], $this->link)) {
-            throw new GDBException("Error selecting database '{$this->database}'");
+        if (isset($this->config['read']) || isset($this->config['write'])) {
+            // do nothing - delay connection until we know what we need
+        } else {
+            $this->read_link = $this->mysql_connect($this->config);
+            $this->write_link = $this->read_link;
         }
     }
     
@@ -525,33 +575,35 @@ class GDBMySQL extends GDB
     }
     
     public function quote_string($s) {
-        return $s === null ? 'NULL' : "'" . mysql_real_escape_string($s, $this->link) . "'";
+        return $s === null ? 'NULL' : "'" . mysql_real_escape_string($s, $this->any_link()) . "'";
     }
     
     public function last_insert_id($sequence = null) {
-        return mysql_insert_id($this->link);
+        return mysql_insert_id($this->write_link);
     }
     
     protected function perform_query($sql) {
-        if (!$res = mysql_query($sql)) {
-            $this->handle_error($sql); // will throw
+        $link = $this->get_mysql_link_for_query($sql);
+        if (!($res = mysql_query($sql, $link))) {
+            $this->handle_error($sql, $link); // will throw
         } else {
             return new GDBResultMySQL($res);
         }
     }
     
     protected function perform_exec($sql) {
-        if (!$res = mysql_query($sql)) {
-            $this->handle_error(); // will throw
+        $link = $this->get_mysql_link_for_query($sql);
+        if (!($res = mysql_query($sql, $link))) {
+            $this->handle_error($sql, $link); // will throw
         } else {
-            return mysql_affected_rows($this->link);
+            return mysql_affected_rows($link);
         }
     }
     
-    protected function handle_error($sql = null) {
+    protected function handle_error($sql, $link) {
         
-        $error  = mysql_error($this->link);
-        $code   = mysql_errno($this->link);
+        $error  = mysql_error($link);
+        $code   = mysql_errno($link);
         
         switch ($code) {
             
