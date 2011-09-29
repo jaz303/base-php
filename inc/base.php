@@ -189,4 +189,30 @@ class Inflector
         return preg_replace('/(^|_)([a-z])/ie', 'strtoupper("$2")', $string);
     }
 }
+
+class StringUtils
+{
+    const ALPHA_LOWER   = 1;
+    const ALPHA_UPPER   = 2;
+    const ALPHA         = 3;
+    const NUMERIC       = 4;
+    const ALPHA_NUMERIC = 7;
+  
+    public static function random($length, $set = self::ALPHA_NUMERIC) {
+        if (is_string($set)) {
+            $chars = $set;
+        } else {
+            $chars = '';
+            if ($set && self::ALPHA_LOWER)      $chars .= 'abcdefghijklmnopqrstuvwxyz';
+            if ($set && self::ALPHA_UPPER)      $chars .= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if ($set && self::ALPHA_NUMERIC)    $chars .= '0123456789';
+        }
+        $cl = strlen($chars) - 1;
+        $out = '';
+        for ($i = 0; $i < $length; $i++) {
+            $out .= $chars[rand(0, $cl)];
+        }
+        return $out;
+    }
+}
 ?>
